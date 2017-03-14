@@ -1,0 +1,25 @@
+﻿# 此配置文件用于轨迹数据文件管理的参数管理，建议开发人员在使用框架里的数据管理功能前首先通过配置文件类加载此配置文件。若开发人员不使用本框架对数据进行管理则不用配置此文件。
+
+# 原始数据文件路径
+srcTrajFile=e:/taxidata/200000num-2hour-60s.txt
+
+# 管理生成的轨迹数据文件目录路径
+trajDataFilesDir=e:/taxidata/trajmanage1
+
+# 分段阈值,以米为单位
+DPThreshold=200
+
+# 数据文件大小，以SizeBase为单位
+dataFileSize=1
+
+# 数据文件大小基数，默认为16M
+sizeBase=16777216
+
+# 簇的大小，以Byte为单位
+block=4096
+
+# 是否对齐
+isAligned=false
+
+# 统计段以4k为单位的分布情况的文件路径
+statisticsSegFile=e:/taxidata/SegmentSizeCount.txt
