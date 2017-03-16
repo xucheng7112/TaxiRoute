@@ -2,15 +2,19 @@ package xc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import traj.database.io.TrajDataFileInput;
 import traj.util.Point;
@@ -20,12 +24,14 @@ public class Graph {
 	private Map<Integer, List<Integer>> vertexMap;// 邻接表
 	private Map<Integer, MapNode> nodeMap; // 存储所有点
 	private Map<Integer, MapEdge> edgeMap; // 存储所有边
+	private Map<Integer, Integer> edgeDensity; // 边的密度
 
 	public Graph() {
 		// 初始化邻接表
 		vertexMap = new HashMap<Integer, List<Integer>>();
 		nodeMap = new HashMap<Integer, MapNode>();
 		edgeMap = new HashMap<Integer, MapEdge>();
+		edgeDensity = new HashMap<Integer, Integer>();
 		init("MapData/edges.txt", "MapData/vertices.txt");
 	}
 
@@ -88,7 +94,7 @@ public class Graph {
 				count -= 500;
 				filename = "H:/taxidata/mapMatchingResult/" + id + "-" + index
 						+ ".txt";
-			}else{
+			} else {
 				count++;
 			}
 			Trajectory tra = tdfi.readTrajectory();
@@ -127,6 +133,60 @@ public class Graph {
 
 	}
 
+	// 生成路标
+	public void getLandMarks() {
+		try {
+			String path = "H:/taxidata/mapMatchingResult/";
+			File file = new File(path);
+			File[] filelist = file.listFiles();
+			//统计密度
+			for (int i = 0; i < filelist.length; i++) {
+				String filename = filelist[i].getAbsolutePath();
+				String thisLine = null;
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				while ((thisLine = br.readLine()) != null) {
+					if (thisLine.length() != 1) {
+						String[] a = thisLine.split(";");
+						int roadid = Integer.parseInt(a[0].trim());
+						if (edgeDensity.containsKey(roadid)) {
+							edgeDensity
+									.put(roadid, edgeDensity.get(roadid) + 1);
+						} else {
+							edgeDensity.put(roadid, 1);
+						}
+					}
+				}
+				br.close();
+				System.out.println(filelist[i].getName() + "  统计结束");
+			}
+			//密度排序
+			List<Entry<Integer, Integer>> list = new ArrayList<Map.Entry<Integer, Integer>>(
+					edgeDensity.entrySet());
+			Collections.sort(list,
+					new Comparator<Map.Entry<Integer, Integer>>() {
+						public int compare(Entry<Integer, Integer> o1,
+								Entry<Integer, Integer> o2) {
+							return (o2.getValue() - o1.getValue());
+						}
+					});
+			//遍历前4000，保存
+			String filename = "H:/taxidata/mapMatchingResult/edgeDensity.txt";
+			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+			for(int i=0;i<4000;i++){
+				Entry<Integer, Integer> mapping =list.get(i);
+				bw.write(mapping.getKey().toString());
+				bw.newLine();
+			}
+			bw.flush();
+			bw.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			System.out.println("密度统计完毕");
+		}
+
+	}
+
 	// 轨迹点匹配路网
 	private MapEdge getNearEdge(double lat, double lng) {
 		MapEdge e = null;
@@ -147,6 +207,7 @@ public class Graph {
 		return e;
 	}
 
+	// 点到直线距离
 	private double getDistance(double lat, double lng, int node1, int node2) {
 		MapNode n1 = nodeMap.get(node1);
 		MapNode n2 = nodeMap.get(node2);

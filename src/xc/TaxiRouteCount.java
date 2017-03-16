@@ -10,10 +10,10 @@ import traj.database.management.TrajDataFileManagement;
 import traj.util.Trajectory;
 
 public class TaxiRouteCount {
-	static TrajDataFileConfiguration tdfc;
-	static TrajDataFileManagement tdfm;
+	TrajDataFileConfiguration tdfc;
+	TrajDataFileManagement tdfm;
 
-	public static void main(String[] args) {
+	private void mapMatching() {
 		tdfc = new TrajDataFileConfiguration("TraLib/configuration1.txt");
 		tdfm = new TrajDataFileManagement(tdfc.getTrajDataFilesDir());
 		List<TrajDataFile> tdfList = tdfm.getTrajDataFileList();
@@ -25,6 +25,17 @@ public class TaxiRouteCount {
 			ThreadGraph t = new ThreadGraph(tdfi, i);
 			executor.execute(t);
 		}
+	}
+
+	public static void main(String[] args) {
+		TaxiRouteCount trc = new TaxiRouteCount();
+		// trc.mapMatching();
+		trc.getLandMarks();
+	}
+
+	private void getLandMarks() {
+		Graph g = new Graph();
+		g.getLandMarks();
 	}
 }
 
