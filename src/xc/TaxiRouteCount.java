@@ -3,6 +3,7 @@ package xc;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 import traj.database.io.TrajDataFile;
 import traj.database.io.TrajDataFileConfiguration;
 import traj.database.io.TrajDataFileInput;
@@ -27,16 +28,30 @@ public class TaxiRouteCount {
 		}
 	}
 
-	public static void main(String[] args) {
-		TaxiRouteCount trc = new TaxiRouteCount();
-		// trc.mapMatching();
-		trc.getLandMarks();
-	}
-
 	private void getLandMarks() {
 		Graph g = new Graph();
 		g.getLandMarks();
 	}
+
+	private void ConvertTraToLandMarkSeq() {
+		// TODO Auto-generated method stub
+		Graph g = new Graph();
+		g.ConvertTraToLandMarkSeq();
+	}
+
+	private void initLandMarkGraph() {
+		Graph g = new Graph();
+		g.initLandMarkGraph();
+	}
+
+	public static void main(String[] args) {
+		TaxiRouteCount trc = new TaxiRouteCount();
+		// trc.mapMatching();
+		// trc.getLandMarks();
+		// trc.ConvertTraToLandMarkSeq();
+		trc.initLandMarkGraph();
+	}
+
 }
 
 class ThreadGraph extends Thread {

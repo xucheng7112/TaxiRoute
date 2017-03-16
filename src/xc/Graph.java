@@ -25,6 +25,7 @@ public class Graph {
 	private Map<Integer, MapNode> nodeMap; // 存储所有点
 	private Map<Integer, MapEdge> edgeMap; // 存储所有边
 	private Map<Integer, Integer> edgeDensity; // 边的密度
+	private List<Integer> LandMarknode; // 第一个参数为边的id，第二个参数为边对象
 
 	public Graph() {
 		// 初始化邻接表
@@ -133,13 +134,13 @@ public class Graph {
 
 	}
 
-	// 生成路标
+	// 生成landmark
 	public void getLandMarks() {
 		try {
-			String path = "H:/taxidata/mapMatchingResult/";
+			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
 			File file = new File(path);
 			File[] filelist = file.listFiles();
-			//统计密度
+			// 统计密度
 			for (int i = 0; i < filelist.length; i++) {
 				String filename = filelist[i].getAbsolutePath();
 				String thisLine = null;
@@ -159,7 +160,7 @@ public class Graph {
 				br.close();
 				System.out.println(filelist[i].getName() + "  统计结束");
 			}
-			//密度排序
+			// 密度排序
 			List<Entry<Integer, Integer>> list = new ArrayList<Map.Entry<Integer, Integer>>(
 					edgeDensity.entrySet());
 			Collections.sort(list,
@@ -169,11 +170,11 @@ public class Graph {
 							return (o2.getValue() - o1.getValue());
 						}
 					});
-			//遍历前4000，保存
-			String filename = "H:/taxidata/mapMatchingResult/edgeDensity.txt";
+			// 遍历前4000，保存
+			String filename = "G:/taxidata/mapMatchingResult/edgeDensity.txt";
 			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
-			for(int i=0;i<4000;i++){
-				Entry<Integer, Integer> mapping =list.get(i);
+			for (int i = 0; i < 4000; i++) {
+				Entry<Integer, Integer> mapping = list.get(i);
 				bw.write(mapping.getKey().toString());
 				bw.newLine();
 			}
@@ -185,6 +186,136 @@ public class Graph {
 			System.out.println("密度统计完毕");
 		}
 
+	}
+
+	// roadseqence转换成landmarkseqence
+	public void ConvertTraToLandMarkSeq() {
+		// 初始化landmark地标信息
+		try {
+			LandMarknode = new ArrayList<Integer>();
+			String thisLine = null;
+			BufferedReader br = new BufferedReader(new FileReader(
+					"G:/taxidata/mapMatchingResult/edgeDensity.txt"));
+			while ((thisLine = br.readLine()) != null) {
+				int a = Integer.parseInt(thisLine);
+				LandMarknode.add(a);
+			}
+			br.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+		// roadseqence转换成landmarkseqence
+		try {
+			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
+			File file = new File(path);
+			File[] filelist = file.listFiles();
+			for (int i = 0; i < filelist.length; i++) {
+				String filename = filelist[i].getAbsolutePath();
+				String thisLine = null;
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				BufferedWriter bw = new BufferedWriter(new FileWriter(
+						"G:/taxidata/mapMatchingResult/LandMarkSeqence/LandSeqence "
+								+ filelist[i].getName()));
+				while ((thisLine = br.readLine()) != null) {
+					if (thisLine.length() != 1) {
+						String[] a = thisLine.split(";");
+						int roadid = Integer.parseInt(a[0].trim());
+						if (LandMarknode.contains(roadid)) {
+							bw.write(a[0] + ";" + a[1]);
+							bw.newLine();
+						}
+					} else {
+						bw.write(" ");
+						bw.newLine();
+					}
+				}
+				bw.flush();
+				bw.close();
+				br.close();
+				System.out.println(filelist[i].getName() + " 转换完毕");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+
+	}
+
+	// 根据landmark和所有轨迹 初始化landmarkgraph
+	public void initLandMarkGraph() {
+		// 初始化landmark地标信息
+		try {
+			LandMarknode = new ArrayList<Integer>();
+			String thisLine = null;
+			BufferedReader br = new BufferedReader(new FileReader(
+					"G:/taxidata/mapMatchingResult/edgeDensity.txt"));
+			while ((thisLine = br.readLine()) != null) {
+				int a = Integer.parseInt(thisLine);
+				LandMarknode.add(a);
+			}
+			br.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+
+		// 统计candidate密度
+		Map<String, CandidateEdge> candidatemap = new HashMap<String, CandidateEdge>();
+		try {
+			String path = "G:/taxidata/mapMatchingResult/LandMarkSeqence";
+			File file = new File(path);
+			File[] filelist = file.listFiles();
+			for (int i = 0; i < filelist.length; i++) {
+				String filename = filelist[i].getAbsolutePath();
+				String oneLine = null;
+				String twoLine = null;
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				oneLine = br.readLine();
+				String[] s1 = oneLine.split(";");
+				while ((twoLine = br.readLine()) != null) {
+					if (twoLine.length() != 1) {
+						String[] s2 = twoLine.split(";");
+						int time = getTimeBetweenPoi(s1[1], s2[1]);
+						if (time <= 40) {
+							String candidateid = s1[0].trim() + "+"
+									+ s2[0].trim();
+							if (candidatemap.containsKey(candidateid)) {
+								CandidateEdge ce = candidatemap
+										.get(candidateid);
+								ce.addTime(time);
+								candidatemap.put(candidateid, ce);
+							} else {
+								CandidateEdge ce = new CandidateEdge(
+										candidateid, Integer.parseInt(s1[0]
+												.trim()),
+										Integer.parseInt(s2[0].trim()));
+								ce.addTime(time);
+								candidatemap.put(candidateid, ce);
+							}
+
+						}
+						oneLine = twoLine;
+					} else {
+						oneLine = br.readLine();
+						twoLine = br.readLine();
+					}
+				}
+				br.close();
+				System.out.println();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+	}
+
+	private int getTimeBetweenPoi(String time1, String time2) {
+		String[] a1 = time1.split(" ");
+		String[] a2 = time2.split(" ");
+		int minute1 = Integer.parseInt(a1[2].split(":")[1]);
+		int minute2 = Integer.parseInt(a2[2].split(":")[1]);
+		return (minute2 + 60 - minute1) % 60;
 	}
 
 	// 轨迹点匹配路网
@@ -248,6 +379,7 @@ public class Graph {
 		lineLength = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 		return lineLength;
 	}
+
 }
 
 class MapNode {
@@ -282,6 +414,7 @@ class MapEdge {
 	private int startNode, endNode;
 
 	// private double weight;
+
 	public MapEdge(int edgeId, int startNode, int endNode) {
 		this.edgeId = edgeId;
 		this.startNode = startNode; //
@@ -321,5 +454,23 @@ class MapResult {
 
 	public Timestamp getTime() {
 		return time;
+	}
+}
+
+class CandidateEdge {
+	private String candidateEdgeID;
+	private int startEdgeID;
+	private int endEdgeID;
+	List<Integer> timeList;
+
+	public CandidateEdge(String candidateEdgeID, int startEdgeID, int endEdgeID) {
+		this.candidateEdgeID = candidateEdgeID;
+		this.startEdgeID = startEdgeID;
+		this.endEdgeID = endEdgeID;
+		timeList = new ArrayList<Integer>();
+	}
+
+	public void addTime(int time) {
+		timeList.add(time);
 	}
 }

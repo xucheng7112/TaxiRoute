@@ -1,9 +1,9 @@
 #配置文件说明：请用户根据参数说明进行相关参数的修改，修改时只需修改等号后面的东西即可
 # 原始数据文件路径
-srcTrajFile=H:/taxidata/100000num-2hour-60s.txt
+srcTrajFile=G:/taxidata/100000num-2hour-60s.txt
 
 # 数据文件目录存放路径
-trajDataFilesDir=H:/taxidata/trajManagementDemo
+trajDataFilesDir=G:/taxidata/trajManagementDemo
 
 # 分段阈值,以米为单位
 DPThreshold=200
@@ -21,4 +21,4 @@ block=4096
 isAligned=false
 
 # 统计段以4k为单位的分布情况的文件路径
-statisticsSegFile=H:/taxidata/SegmentSizeCount.txt
+statisticsSegFile=G:/taxidata/SegmentSizeCount.txt
