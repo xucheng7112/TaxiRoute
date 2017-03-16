@@ -79,8 +79,18 @@ public class Graph {
 
 	public void mapMatching(TrajDataFileInput tdfi, int id) {
 		// Â·ÍøÆ¥Åä
-		String filename = "G:/taxidata/mapMatchingResult/" + id+".txt";
+		String filename = "H:/taxidata/mapMatchingResult/" + id + "-0" + ".txt";
+		int index = 0;
+		int count = 0;
 		while (tdfi.hasNextTrajectory()) {
+			if (count > 499) {
+				index++;
+				count -= 500;
+				filename = "H:/taxidata/mapMatchingResult/" + id + "-" + index
+						+ ".txt";
+			}else{
+				count++;
+			}
 			Trajectory tra = tdfi.readTrajectory();
 			List<Point> tralist = tra.getTrajPtList();
 			List<MapResult> traresult = new ArrayList<MapResult>();
@@ -114,6 +124,7 @@ public class Graph {
 				System.out.println("³µÁ¾" + tra.getTrajID() + "Æ¥Åä½áÊø");
 			}
 		}
+
 	}
 
 	// ¹ì¼£µãÆ¥ÅäÂ·Íø

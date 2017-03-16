@@ -22,7 +22,7 @@ public class TaxiRouteCount {
 		for (int i = 0; i < tdfList.size(); i++) {
 			TrajDataFile tdf = tdfList.get(i);
 			TrajDataFileInput tdfi = new TrajDataFileInput(tdf);
-			ThreadGraph t = new ThreadGraph(tdfi,i);
+			ThreadGraph t = new ThreadGraph(tdfi, i);
 			executor.execute(t);
 		}
 	}
@@ -31,14 +31,15 @@ public class TaxiRouteCount {
 class ThreadGraph extends Thread {
 	TrajDataFileInput tdfi;
 	int id;
+
 	public ThreadGraph(TrajDataFileInput tdfi, int i) {
 		this.tdfi = tdfi;
-		this.id=i;
+		this.id = i;
 	}
 
 	public void run() {
 		Graph g = new Graph();
-		g.mapMatching(tdfi,id);
+		g.mapMatching(tdfi, id);
 	}
 
 }
