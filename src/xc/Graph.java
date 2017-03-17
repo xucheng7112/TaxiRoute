@@ -261,7 +261,7 @@ public class Graph {
 		}
 
 		// Õ≥º∆candidate√‹∂»
-		Map<String, CandidateEdge> candidatemap = new HashMap<String, CandidateEdge>();
+		Map<String, List<Integer>> candidatemap = new HashMap<String, List<Integer>>();
 		try {
 			String path = "G:/taxidata/mapMatchingResult/LandMarkSeqence";
 			File file = new File(path);
@@ -281,17 +281,11 @@ public class Graph {
 							String candidateid = s1[0].trim() + "+"
 									+ s2[0].trim();
 							if (candidatemap.containsKey(candidateid)) {
-								CandidateEdge ce = candidatemap
-										.get(candidateid);
-								ce.addTime(time);
-								candidatemap.put(candidateid, ce);
+								candidatemap.get(candidateid).add(time);
 							} else {
-								CandidateEdge ce = new CandidateEdge(
-										candidateid, Integer.parseInt(s1[0]
-												.trim()),
-										Integer.parseInt(s2[0].trim()));
-								ce.addTime(time);
-								candidatemap.put(candidateid, ce);
+								List<Integer> timelist = new ArrayList<Integer>();
+								timelist.add(time);
+								candidatemap.put(candidateid, timelist);
 							}
 
 						}
@@ -454,23 +448,5 @@ class MapResult {
 
 	public Timestamp getTime() {
 		return time;
-	}
-}
-
-class CandidateEdge {
-	private String candidateEdgeID;
-	private int startEdgeID;
-	private int endEdgeID;
-	List<Integer> timeList;
-
-	public CandidateEdge(String candidateEdgeID, int startEdgeID, int endEdgeID) {
-		this.candidateEdgeID = candidateEdgeID;
-		this.startEdgeID = startEdgeID;
-		this.endEdgeID = endEdgeID;
-		timeList = new ArrayList<Integer>();
-	}
-
-	public void addTime(int time) {
-		timeList.add(time);
 	}
 }
