@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.sun.org.apache.xpath.internal.operations.And;
+
 import traj.database.io.TrajDataFileInput;
 import traj.util.Point;
 import traj.util.Trajectory;
@@ -261,7 +263,7 @@ public class Graph {
 		}
 
 		// 统计candidate密度
-		Map<String, List<Integer>> candidatemap = new HashMap<String, List<Integer>>();
+		Map<String, List<Integer>> candidateedge = new HashMap<String, List<Integer>>();
 		try {
 			String path = "G:/taxidata/mapMatchingResult/LandMarkSeqence";
 			File file = new File(path);
@@ -280,12 +282,12 @@ public class Graph {
 						if (time <= 40) {
 							String candidateid = s1[0].trim() + "+"
 									+ s2[0].trim();
-							if (candidatemap.containsKey(candidateid)) {
-								candidatemap.get(candidateid).add(time);
+							if (candidateedge.containsKey(candidateid)) {
+								candidateedge.get(candidateid).add(time);
 							} else {
 								List<Integer> timelist = new ArrayList<Integer>();
 								timelist.add(time);
-								candidatemap.put(candidateid, timelist);
+								candidateedge.put(candidateid, timelist);
 							}
 
 						}
@@ -301,15 +303,31 @@ public class Graph {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
+			// for(String key: candidatemap.keySet()){
+			// System.out.println(key+ "  "+ candidatemap.get(key).size());
+			// }
+			// System.out.println(candidatemap.size());
 		}
+		// 从candidateedge候选边到landmarkedge
+		Map<String, List<Integer>> landmarkedge = new HashMap<String, List<Integer>>();
+		for (String key : candidateedge.keySet()) {
+			if (candidateedge.get(key).size() >= 30) {
+				landmarkedge.put(key, candidateedge.get(key));
+			}
+		}
+		for (String key : landmarkedge.keySet()) {
+			System.out.println(key + "  " + landmarkedge.get(key).size());
+		}
+		System.out.println(landmarkedge.size());
 	}
 
+	// 计算两段时间之差
 	private int getTimeBetweenPoi(String time1, String time2) {
 		String[] a1 = time1.split(" ");
 		String[] a2 = time2.split(" ");
 		int minute1 = Integer.parseInt(a1[2].split(":")[1]);
 		int minute2 = Integer.parseInt(a2[2].split(":")[1]);
-		return (minute2 + 60 - minute1) % 60;
+		return ((minute2 + 60 - minute1) % 60);
 	}
 
 	// 轨迹点匹配路网
