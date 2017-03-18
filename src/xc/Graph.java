@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,8 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import com.sun.org.apache.xpath.internal.operations.And;
 
 import traj.database.io.TrajDataFileInput;
 import traj.util.Point;
@@ -102,25 +99,22 @@ public class Graph {
 			}
 			Trajectory tra = tdfi.readTrajectory();
 			List<Point> tralist = tra.getTrajPtList();
-			List<MapResult> traresult = new ArrayList<MapResult>();
+			List<String> traresult = new ArrayList<String>();
 			List<Integer> temp = new ArrayList<Integer>();
 			for (int i = 0; i < tra.size(); i++) {
 				Point p = tralist.get(i);
 				MapEdge mapedge = getNearEdge(p.getLat(), p.getLng());
 				if (!temp.contains(mapedge.getEdgeId())) {
 					temp.add(mapedge.getEdgeId());
-					traresult.add(new MapResult(mapedge.getEdgeId(), p
-							.getTime()));
+					traresult.add(mapedge.getEdgeId() + " ; " + p.getTime());
 				}
 			}
 			// 保存倒文件
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(filename,
 						true));
-				String line = "";
-				for (MapResult mapre : traresult) {
-					line = mapre.getRoadid() + " ; " + mapre.getTime();
-					bw.write(line);
+				for (String mapre : traresult) {
+					bw.write(mapre);
 					bw.newLine();
 				}
 				bw.write(" ");
@@ -263,7 +257,7 @@ public class Graph {
 		}
 
 		// 统计candidate密度
-		Map<String, List<Integer>> candidateedge = new HashMap<String, List<Integer>>();
+		Map<String, List<String>> candidateedge = new HashMap<String, List<String>>();
 		try {
 			String path = "G:/taxidata/mapMatchingResult/LandMarkSeqence";
 			File file = new File(path);
@@ -279,44 +273,51 @@ public class Graph {
 					if (twoLine.length() != 1) {
 						String[] s2 = twoLine.split(";");
 						int time = getTimeBetweenPoi(s1[1], s2[1]);
-						if (time <= 40) {
+						if (time <= 10) {
 							String candidateid = s1[0].trim() + "+"
 									+ s2[0].trim();
+							String day = (s1[1].split(" ")[1]).split("-")[2];
+							String hour = (s1[1].split(" ")[2]).split(":")[0];
 							if (candidateedge.containsKey(candidateid)) {
-								candidateedge.get(candidateid).add(time);
+								candidateedge.get(candidateid).add(
+										day + "+" + hour + "+" + time);
 							} else {
-								List<Integer> timelist = new ArrayList<Integer>();
-								timelist.add(time);
+								List<String> timelist = new ArrayList<String>();
+								timelist.add(day + "+" + hour + "+" + time);
 								candidateedge.put(candidateid, timelist);
 							}
-
 						}
 						oneLine = twoLine;
+						s1 = oneLine.split(";");
 					} else {
 						oneLine = br.readLine();
 						twoLine = br.readLine();
 					}
 				}
 				br.close();
-				System.out.println();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			// for(String key: candidatemap.keySet()){
-			// System.out.println(key+ "  "+ candidatemap.get(key).size());
+			// for (String key : candidateedge.keySet()) {
+			// System.out.println(key);
+			// List<String> value = candidateedge.get(key);
+			// for (int i = 0; i < value.size(); i++) {
+			// System.out.println(value.get(i));
 			// }
-			// System.out.println(candidatemap.size());
+			// System.out.println();
+			// System.out.println();
+			// }
+			// System.out.println(candidateedge.size());
 		}
+		System.out.println("~~~~~~~~~~~~~");
 		// 从candidateedge候选边到landmarkedge
-		Map<String, List<Integer>> landmarkedge = new HashMap<String, List<Integer>>();
+		Map<String, landmarkedge> landmarkedge = new HashMap<String, landmarkedge>();
 		for (String key : candidateedge.keySet()) {
-			if (candidateedge.get(key).size() >= 30) {
-				landmarkedge.put(key, candidateedge.get(key));
+				if (candidateedge.get(key).size() >= 30) {
+					landmarkedge.put(key,
+							new landmarkedge(key, candidateedge.get(key)));
 			}
-		}
-		for (String key : landmarkedge.keySet()) {
-			System.out.println(key + "  " + landmarkedge.get(key).size());
 		}
 		System.out.println(landmarkedge.size());
 	}
@@ -392,79 +393,4 @@ public class Graph {
 		return lineLength;
 	}
 
-}
-
-class MapNode {
-	private int nodeId;
-	private double x, y;
-
-	public MapNode(int nodeId, double x, double y) {
-		this.nodeId = nodeId;
-		this.x = x;
-		this.y = y;
-	}
-
-	public int getNodeId() {
-		return nodeId;
-	}
-
-	public double getxPoint() {
-		return x;
-	}
-
-	public double getyPoint() {
-		return y;
-	}
-
-	public void printData() {
-		System.out.println(nodeId + " " + x + " " + y);
-	}
-}
-
-class MapEdge {
-	private int edgeId;
-	private int startNode, endNode;
-
-	// private double weight;
-
-	public MapEdge(int edgeId, int startNode, int endNode) {
-		this.edgeId = edgeId;
-		this.startNode = startNode; //
-		this.endNode = endNode;//
-		// this.weight = weight; //
-	}
-
-	public int getStartNode() {
-		return startNode;
-	}
-
-	public int getEndNode() {
-		return endNode;
-	}
-
-	public int getEdgeId() {
-		return edgeId;
-	}
-
-	public void printData() {
-		System.out.println(edgeId + " " + startNode + " " + endNode);
-	}
-}
-
-class MapResult {
-	private int roadid;
-	private Timestamp time;
-
-	public MapResult(int roadid, Timestamp time) {
-		this.roadid = roadid;
-		this.time = time;
-	}
-
-	public int getRoadid() {
-		return roadid;
-	}
-
-	public Timestamp getTime() {
-		return time;
-	}
 }
