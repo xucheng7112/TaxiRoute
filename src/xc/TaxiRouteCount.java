@@ -1,57 +1,36 @@
 package xc;
 
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import traj.database.io.TrajDataFile;
+import datastruct.MapNode;
 import traj.database.io.TrajDataFileConfiguration;
 import traj.database.io.TrajDataFileInput;
 import traj.database.management.TrajDataFileManagement;
-import traj.util.Trajectory;
 
 public class TaxiRouteCount {
 	TrajDataFileConfiguration tdfc;
 	TrajDataFileManagement tdfm;
-
-	private void mapMatching() {
-		tdfc = new TrajDataFileConfiguration("TraLib/configuration1.txt");
-		tdfm = new TrajDataFileManagement(tdfc.getTrajDataFilesDir());
-		List<TrajDataFile> tdfList = tdfm.getTrajDataFileList();
-
-		Executor executor = Executors.newFixedThreadPool(6);
-		for (int i = 0; i < tdfList.size(); i++) {
-			TrajDataFile tdf = tdfList.get(i);
-			TrajDataFileInput tdfi = new TrajDataFileInput(tdf);
-			ThreadGraph t = new ThreadGraph(tdfi, i);
-			executor.execute(t);
-		}
-	}
-
-	private void getLandMarks() {
-		Graph g = new Graph();
-		g.getLandMarks();
-	}
-
-	private void ConvertTraToLandMarkSeq() {
-		// TODO Auto-generated method stub
-		Graph g = new Graph();
-		g.ConvertTraToLandMarkSeq();
-	}
-
-	private void initLandMarkGraph() {
-		Graph g = new Graph();
-		g.initLandMarkGraph();
-	}
+	Graph g = new Graph();
 
 	public static void main(String[] args) {
 		TaxiRouteCount trc = new TaxiRouteCount();
-		// trc.mapMatching();
-		// trc.getLandMarks();
-		// trc.ConvertTraToLandMarkSeq();
-		trc.initLandMarkGraph();
+		trc.getroute(new MapNode(0, 40.1980209, 116.2346649), new MapNode(1,
+				39.909795959259256, 116.5940783074074));
 	}
 
+	private void getroute(MapNode mapNode, MapNode mapNode2) {
+		g = new Graph();
+		g.getroute(mapNode, mapNode2);
+	}
+
+	/*
+	 * private void mapMatching() { tdfc = new
+	 * TrajDataFileConfiguration("TraLib/configuration1.txt"); tdfm = new
+	 * TrajDataFileManagement(tdfc.getTrajDataFilesDir()); List<TrajDataFile>
+	 * tdfList = tdfm.getTrajDataFileList(); Executor executor =
+	 * Executors.newFixedThreadPool(6); for (int i = 0; i < tdfList.size(); i++)
+	 * { TrajDataFile tdf = tdfList.get(i); TrajDataFileInput tdfi = new
+	 * TrajDataFileInput(tdf); ThreadGraph t = new ThreadGraph(tdfi, i);
+	 * executor.execute(t); } }
+	 */
 }
 
 class ThreadGraph extends Thread {

@@ -2,29 +2,29 @@ package xc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import traj.database.io.TrajDataFileInput;
 import traj.util.Point;
 import traj.util.Trajectory;
+import datastruct.LandMarkGraph;
+import datastruct.MapEdge;
+import datastruct.MapNode;
 
 public class Graph {
 	private Map<Integer, List<Integer>> vertexMap;// 邻接表
 	private Map<Integer, MapNode> nodeMap; // 存储所有点
 	private Map<Integer, MapEdge> edgeMap; // 存储所有边
 	private Map<Integer, Integer> edgeDensity; // 边的密度
-	private List<Integer> LandMarknode; // 第一个参数为边的id，第二个参数为边对象
+	private List<Integer> LandMarknode; // top-4000个边的id
+	private LandMarkGraph lmg;
 
 	public Graph() {
 		// 初始化邻接表
@@ -130,207 +130,6 @@ public class Graph {
 
 	}
 
-	// 生成landmark
-	public void getLandMarks() {
-		try {
-			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
-			File file = new File(path);
-			File[] filelist = file.listFiles();
-			// 统计密度
-			for (int i = 0; i < filelist.length; i++) {
-				String filename = filelist[i].getAbsolutePath();
-				String thisLine = null;
-				BufferedReader br = new BufferedReader(new FileReader(filename));
-				while ((thisLine = br.readLine()) != null) {
-					if (thisLine.length() != 1) {
-						String[] a = thisLine.split(";");
-						int roadid = Integer.parseInt(a[0].trim());
-						if (edgeDensity.containsKey(roadid)) {
-							edgeDensity
-									.put(roadid, edgeDensity.get(roadid) + 1);
-						} else {
-							edgeDensity.put(roadid, 1);
-						}
-					}
-				}
-				br.close();
-				System.out.println(filelist[i].getName() + "  统计结束");
-			}
-			// 密度排序
-			List<Entry<Integer, Integer>> list = new ArrayList<Map.Entry<Integer, Integer>>(
-					edgeDensity.entrySet());
-			Collections.sort(list,
-					new Comparator<Map.Entry<Integer, Integer>>() {
-						public int compare(Entry<Integer, Integer> o1,
-								Entry<Integer, Integer> o2) {
-							return (o2.getValue() - o1.getValue());
-						}
-					});
-			// 遍历前4000，保存
-			String filename = "G:/taxidata/mapMatchingResult/edgeDensity.txt";
-			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
-			for (int i = 0; i < 4000; i++) {
-				Entry<Integer, Integer> mapping = list.get(i);
-				bw.write(mapping.getKey().toString());
-				bw.newLine();
-			}
-			bw.flush();
-			bw.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			System.out.println("密度统计完毕");
-		}
-
-	}
-
-	// roadseqence转换成landmarkseqence
-	public void ConvertTraToLandMarkSeq() {
-		// 初始化landmark地标信息
-		try {
-			LandMarknode = new ArrayList<Integer>();
-			String thisLine = null;
-			BufferedReader br = new BufferedReader(new FileReader(
-					"G:/taxidata/mapMatchingResult/edgeDensity.txt"));
-			while ((thisLine = br.readLine()) != null) {
-				int a = Integer.parseInt(thisLine);
-				LandMarknode.add(a);
-			}
-			br.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		}
-		// roadseqence转换成landmarkseqence
-		try {
-			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
-			File file = new File(path);
-			File[] filelist = file.listFiles();
-			for (int i = 0; i < filelist.length; i++) {
-				String filename = filelist[i].getAbsolutePath();
-				String thisLine = null;
-				BufferedReader br = new BufferedReader(new FileReader(filename));
-				BufferedWriter bw = new BufferedWriter(new FileWriter(
-						"G:/taxidata/mapMatchingResult/LandMarkSeqence/LandSeqence "
-								+ filelist[i].getName()));
-				while ((thisLine = br.readLine()) != null) {
-					if (thisLine.length() != 1) {
-						String[] a = thisLine.split(";");
-						int roadid = Integer.parseInt(a[0].trim());
-						if (LandMarknode.contains(roadid)) {
-							bw.write(a[0] + ";" + a[1]);
-							bw.newLine();
-						}
-					} else {
-						bw.write(" ");
-						bw.newLine();
-					}
-				}
-				bw.flush();
-				bw.close();
-				br.close();
-				System.out.println(filelist[i].getName() + " 转换完毕");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		}
-
-	}
-
-	// 根据landmark和所有轨迹 初始化landmarkgraph
-	public void initLandMarkGraph() {
-		// 初始化landmark地标信息
-		try {
-			LandMarknode = new ArrayList<Integer>();
-			String thisLine = null;
-			BufferedReader br = new BufferedReader(new FileReader(
-					"G:/taxidata/mapMatchingResult/edgeDensity.txt"));
-			while ((thisLine = br.readLine()) != null) {
-				int a = Integer.parseInt(thisLine);
-				LandMarknode.add(a);
-			}
-			br.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		}
-
-		// 统计candidate密度
-		Map<String, List<String>> candidateedge = new HashMap<String, List<String>>();
-		try {
-			String path = "G:/taxidata/mapMatchingResult/LandMarkSeqence";
-			File file = new File(path);
-			File[] filelist = file.listFiles();
-			for (int i = 0; i < filelist.length; i++) {
-				String filename = filelist[i].getAbsolutePath();
-				String oneLine = null;
-				String twoLine = null;
-				BufferedReader br = new BufferedReader(new FileReader(filename));
-				oneLine = br.readLine();
-				String[] s1 = oneLine.split(";");
-				while ((twoLine = br.readLine()) != null) {
-					if (twoLine.length() != 1) {
-						String[] s2 = twoLine.split(";");
-						int time = getTimeBetweenPoi(s1[1], s2[1]);
-						if (time <= 10) {
-							String candidateid = s1[0].trim() + "+"
-									+ s2[0].trim();
-							String day = (s1[1].split(" ")[1]).split("-")[2];
-							String hour = (s1[1].split(" ")[2]).split(":")[0];
-							if (candidateedge.containsKey(candidateid)) {
-								candidateedge.get(candidateid).add(
-										day + "+" + hour + "+" + time);
-							} else {
-								List<String> timelist = new ArrayList<String>();
-								timelist.add(day + "+" + hour + "+" + time);
-								candidateedge.put(candidateid, timelist);
-							}
-						}
-						oneLine = twoLine;
-						s1 = oneLine.split(";");
-					} else {
-						oneLine = br.readLine();
-						twoLine = br.readLine();
-					}
-				}
-				br.close();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			// for (String key : candidateedge.keySet()) {
-			// System.out.println(key);
-			// List<String> value = candidateedge.get(key);
-			// for (int i = 0; i < value.size(); i++) {
-			// System.out.println(value.get(i));
-			// }
-			// System.out.println();
-			// System.out.println();
-			// }
-			// System.out.println(candidateedge.size());
-		}
-		System.out.println("~~~~~~~~~~~~~");
-		// 从candidateedge候选边到landmarkedge
-		Map<String, landmarkedge> landmarkedge = new HashMap<String, landmarkedge>();
-		for (String key : candidateedge.keySet()) {
-				if (candidateedge.get(key).size() >= 30) {
-					landmarkedge.put(key,
-							new landmarkedge(key, candidateedge.get(key)));
-			}
-		}
-		System.out.println(landmarkedge.size());
-	}
-
-	// 计算两段时间之差
-	private int getTimeBetweenPoi(String time1, String time2) {
-		String[] a1 = time1.split(" ");
-		String[] a2 = time2.split(" ");
-		int minute1 = Integer.parseInt(a1[2].split(":")[1]);
-		int minute2 = Integer.parseInt(a2[2].split(":")[1]);
-		return ((minute2 + 60 - minute1) % 60);
-	}
-
 	// 轨迹点匹配路网
 	private MapEdge getNearEdge(double lat, double lng) {
 		MapEdge e = null;
@@ -391,6 +190,19 @@ public class Graph {
 		double lineLength = 0;
 		lineLength = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 		return lineLength;
+	}
+
+	public void getroute(MapNode mapNode, MapNode mapNode2) {
+		lmg = new LandMarkGraph(edgeDensity);
+		MapEdge mapedge = getNearEdge(mapNode.getxPoint(), mapNode.getyPoint());
+		MapEdge mapedge2 = getNearEdge(mapNode2.getxPoint(),
+				mapNode2.getyPoint());
+		List<Integer> roughroute = lmg.getRoughRouting(mapedge.getEdgeId(),
+				mapedge2.getEdgeId());
+		 for (Integer i : roughroute) {
+		 System.out.println(i);
+		 }
+
 	}
 
 }
