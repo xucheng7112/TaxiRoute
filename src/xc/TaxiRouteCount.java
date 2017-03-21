@@ -8,7 +8,7 @@ import traj.database.management.TrajDataFileManagement;
 public class TaxiRouteCount {
 	TrajDataFileConfiguration tdfc;
 	TrajDataFileManagement tdfm;
-	Graph g = new Graph();
+	Graph g;
 
 	public static void main(String[] args) {
 		TaxiRouteCount trc = new TaxiRouteCount();

@@ -1,28 +1,38 @@
 package datastruct;
 
 public class MapNode {
-	private int nodeId;
-	private double x, y;
+	/**
+	 * 点的id
+	 */
+	private Integer nodeId;
+	/**
+	 * lat 维度 lng 经度
+	 */
+	private double lat, lng;
 
-	public MapNode(int nodeId, double x, double y) {
+	public MapNode(int nodeId, double lat, double lng) {
 		this.nodeId = nodeId;
-		this.x = x;
-		this.y = y;
+		this.lat = lat;
+		this.lng = lng;
 	}
 
 	public int getNodeId() {
 		return nodeId;
 	}
 
-	public double getxPoint() {
-		return x;
+	public String getNodeIdS() {
+		return nodeId.toString();
 	}
 
-	public double getyPoint() {
-		return y;
+	public double getLat() {
+		return lat;
+	}
+
+	public double getLng() {
+		return lng;
 	}
 
 	public void printData() {
-		System.out.println(nodeId + " " + x + " " + y);
+		System.out.println(nodeId + " " + lat + " " + lng);
 	}
 }

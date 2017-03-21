@@ -13,26 +13,24 @@ public class test {
 	private List<Integer> result = new ArrayList<Integer>();
 
 	public static void main(String[] args) {
-		 test graph = new test();
-		 path = new int[5][5];
-		 dist = new int[5][5];
-		 int[][] matrix = { { INF, 30, INF, 10, 50 },
-		 { INF, INF, 60, INF, INF }, 
-		 { INF, INF, INF, INF, INF },
-		 { INF, INF, INF, INF, 30 }, 
-		 { 50, INF, 40, INF, INF }, };
-		 int begin = 1;
-		 int end = 3;
-		 graph.findCheapestPath(begin, end, matrix);
-		 System.out.println(begin + " to " + end + ",the cheapest path is:");
-		 System.out.println(graph.result.toString());
-		 System.out.println(graph.dist[begin][end]);
-		 for(int i=0;i<5;i++){
-			 for(int j=0;j<5;j++){
-				 System.out.print(dist[i][j]+" ");
-			 }
-			 System.out.println();
-		 }
+		test graph = new test();
+		path = new int[5][5];
+		dist = new int[5][5];
+		int[][] matrix = { { INF, 30, INF, 10, 50 },
+				{ INF, INF, 60, INF, INF }, { INF, INF, INF, INF, INF },
+				{ INF, INF, INF, INF, 30 }, { 50, INF, 40, INF, INF }, };
+		int begin = 1;
+		int end = 3;
+		graph.findCheapestPath(begin, end, matrix);
+		System.out.println(begin + " to " + end + ",the cheapest path is:");
+		System.out.println(graph.result.toString());
+		System.out.println(graph.dist[begin][end]);
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 5; j++) {
+				System.out.print(dist[i][j] + " ");
+			}
+			System.out.println();
+		}
 	}
 
 	public void findCheapestPath(int begin, int end, int[][] matrix) {

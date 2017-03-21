@@ -20,13 +20,13 @@ public class LandMarkGraph {
 	private List<Integer> result = new ArrayList<Integer>();
 
 	public LandMarkGraph(Map<Integer, Integer> edgeDensity) {
-		// getLandMarksnode(edgeDensity);
+		// CountLandMarksnode(edgeDensity);
 		// ConvertTraToLandMarkSeq();
 		initLandMarkNode();
 		initLandMarkEdge();
 	}
 
-	public List<Integer> getRoughRouting(Integer startroadid, Integer endroadid) {
+	public List<Integer> getRoughRoute(Integer startroadid, Integer endroadid) {
 		// floyd算法
 		int nodelength;
 		nodelength = LandMarknode.size();
@@ -74,18 +74,19 @@ public class LandMarkGraph {
 				}
 			}
 		}
-//		for (int i = 0; i < nodelength; i++) {
-//			for (int j = 0; j < nodelength; j++) {
-//				if (dist[i][j] != INF) {
-//					System.out.print(dist[i][j] + " ");
-//				}else{
-//					System.out.print(-11 + " ");
-//				}
-//			}
-//			System.out.println();
-//		}
-		startroadid=Integer.parseInt("334823");
-		endroadid=Integer.parseInt("236760");
+		// for (int i = 0; i < nodelength; i++) {
+		// for (int j = 0; j < nodelength; j++) {
+		// if (dist[i][j] != INF) {
+		// System.out.print(ntonodeid.get(i)+" "+ ntonodeid.get(j)+
+		// " "+dist[i][j] + " |||");
+		// }else{
+		// System.out.print(-11 + " ");
+		// }
+		// }
+		// System.out.println();
+		// }
+		startroadid = Integer.parseInt("243612");
+		endroadid = Integer.parseInt("272565");
 		result.add(nodeidton.get(startroadid));
 		findPath(nodeidton.get(startroadid), nodeidton.get(endroadid), path);
 		result.add(nodeidton.get(endroadid));
@@ -107,7 +108,7 @@ public class LandMarkGraph {
 	}
 
 	// get top-4000 land
-	public void getLandMarksnode(Map<Integer, Integer> edgeDensity) {
+	public void CountLandMarksnode(Map<Integer, Integer> edgeDensity) {
 		try {
 			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
 			File file = new File(path);
@@ -272,7 +273,7 @@ public class LandMarkGraph {
 			// }
 			// System.out.println(candidateedge.size());
 		}
-		System.out.println("~~~~~~~~~~~~~");
+//		System.out.println("~~~~~~~~~~~~~");
 		// 从candidateedge候选边到landmarkedge
 		for (String key : candidateedge.keySet()) {
 			if (candidateedge.get(key).size() >= 10) {
@@ -280,9 +281,10 @@ public class LandMarkGraph {
 						new landmarkedge(key, candidateedge.get(key)));
 			}
 		}
-//		System.out.println(landmarkedge.size());
+		// System.out.println(landmarkedge.size());
 	}
 
+	@SuppressWarnings("unused")
 	private void initlandmarknode() {
 		// 初始化landmarknode地标信息
 		try {
@@ -310,4 +312,9 @@ public class LandMarkGraph {
 		int minute2 = Integer.parseInt(a2[2].split(":")[1]);
 		return ((minute2 + 60 - minute1) % 60);
 	}
+
+	public List<Integer> getLandMarknode() {
+		return LandMarknode;
+	}
+
 }

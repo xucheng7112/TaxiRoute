@@ -1,5 +1,7 @@
 package xc;
 
+import index.*;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -7,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -19,12 +20,30 @@ import datastruct.MapEdge;
 import datastruct.MapNode;
 
 public class Graph {
-	private Map<Integer, List<Integer>> vertexMap;// 邻接表
-	private Map<Integer, MapNode> nodeMap; // 存储所有点
-	private Map<Integer, MapEdge> edgeMap; // 存储所有边
-	private Map<Integer, Integer> edgeDensity; // 边的密度
-	private List<Integer> LandMarknode; // top-4000个边的id
+	/**
+	 * 路网邻接表
+	 */
+	private Map<Integer, List<Integer>> vertexMap;
+	/**
+	 * 存储所有 点的id-点
+	 */
+	private Map<Integer, MapNode> nodeMap;
+	/**
+	 * 存储所有 边的id-边
+	 */
+	private Map<Integer, MapEdge> edgeMap;
+	/**
+	 * 边的 id-密度
+	 */
+	private Map<Integer, Integer> edgeDensity;
+	/**
+	 * 地标图
+	 */
 	private LandMarkGraph lmg;
+	/**
+	 * 网格索引
+	 */
+	private GridIndex gi;
 
 	public Graph() {
 		// 初始化邻接表
@@ -33,8 +52,35 @@ public class Graph {
 		edgeMap = new HashMap<Integer, MapEdge>();
 		edgeDensity = new HashMap<Integer, Integer>();
 		init("MapData/edges.txt", "MapData/vertices.txt");
+		System.out.println("初始化地图完毕");
+		initGridindex();
+		System.out.println("初始化网格索引完毕");
 	}
 
+	/**
+	 * 初始化网格索引
+	 */
+	private void initGridindex() {
+		MBR mapScale = new MBR(115.416666, 39.43333, 117.5000, 41.05);// 地图边界经纬度
+		double side = 2000;
+		List<SnapPoint> ps = new ArrayList<SnapPoint>();
+		for (Integer i : nodeMap.keySet()) {
+			MapNode node = nodeMap.get(i);
+			SnapPoint sp = new SnapPoint(node.getLng(), node.getLat(), null,
+					node.getNodeIdS());
+			ps.add(sp);
+		}
+		gi = new GridIndex(mapScale, side, ps);
+	}
+
+	/**
+	 * 初始化图
+	 * 
+	 * @param edgeFile
+	 *            边文件
+	 * @param nodeFile
+	 *            点文件
+	 */
 	private void init(String edgeFile, String nodeFile) {
 		// 初始化点信息
 		String thisLine = null;
@@ -83,6 +129,12 @@ public class Graph {
 
 	}
 
+	/**
+	 * 路网匹配 出租车轨迹->路网seqence
+	 * 
+	 * @param tdfi
+	 * @param id
+	 */
 	public void mapMatching(TrajDataFileInput tdfi, int id) {
 		// 路网匹配
 		String filename = "H:/taxidata/mapMatchingResult/" + id + "-0" + ".txt";
@@ -130,14 +182,155 @@ public class Graph {
 
 	}
 
-	// 轨迹点匹配路网
+	/**
+	 * 轨迹计算
+	 * 
+	 * @param mapNode
+	 *            起点
+	 * @param mapNode2
+	 *            终点
+	 */
+	public void getroute(MapNode mapNode, MapNode mapNode2) {
+		lmg = new LandMarkGraph(edgeDensity);
+		System.out.println("初始化地标图完毕");
+		MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
+				lmg.getLandMarknode());
+		MapEdge mapedge2 = getNearEdge(mapNode2.getLat(), mapNode2.getLng(),
+				lmg.getLandMarknode());
+		List<Integer> roughroute = lmg.getRoughRoute(mapedge.getEdgeId(),
+				mapedge2.getEdgeId());
+		System.out.println("RoughRoute匹配完毕");
+		List<Integer> finalresult = new ArrayList<Integer>();
+		for (int a = 0; a < roughroute.size() - 1; a++) {
+			finalresult.add(roughroute.get(a));
+			String twonodeid = getTwoNearNode(roughroute.get(a),
+					roughroute.get(a + 1));
+			List<Integer> tmpresult=getExactRoute(Integer.parseInt(twonodeid.split("\\+")[0]),Integer.parseInt(twonodeid.split("\\+")[1]));
+			finalresult.addAll(tmpresult);
+		}
+		finalresult.add(roughroute.get(roughroute.size()-1));
+		// SnapPoint sp = new SnapPoint(mapNode.getLng(), mapNode.getLat(),
+		// null,
+		// mapNode.getNodeIdS());
+		// List<SnapPoint> spl = gi.getPointsFromGrids(sp, 1);
+		// List<SnapPoint> spl = gi.getPointsFromGrid(50, 50);
+		// for (SnapPoint tmpsp : spl) {
+		// System.out.println(tmpsp.getId() + "   " + tmpsp.getLat() + "  "
+		// + tmpsp.getLng());
+		// }
+	}
+
+	/**
+	 * 由两个点获取两点之间的最短路径
+	 * @param nodeid1
+	 * @param nodeid2
+	 * @return
+	 */
+	private List<Integer> getExactRoute(int nodeid1, int nodeid2) {
+		MapNode node1 = nodeMap.get(nodeid1);
+		MapNode node2 = nodeMap.get(nodeid2);
+		IndexPoint ip1 = gi.getIndex(node1.getLng(), node1.getLat());
+		IndexPoint ip2 = gi.getIndex(node2.getLng(), node2.getLat());
+		int m, n, p, q;
+		m = ip1.getIndexLat() < ip2.getIndexLat() ? ip1.getIndexLat() : ip2
+				.getIndexLat();
+		n = ip1.getIndexLat() > ip2.getIndexLat() ? ip1.getIndexLat() : ip2
+				.getIndexLat();
+		p = ip1.getIndexLng() < ip2.getIndexLng() ? ip1.getIndexLng() : ip2
+				.getIndexLng();
+		q = ip1.getIndexLng() > ip2.getIndexLng() ? ip1.getIndexLng() : ip2
+				.getIndexLng();
+		System.out.println(m + " " + n + " " + p + " " + q + " ");
+		List<Integer> nodelist = new ArrayList<Integer>();
+		Map<Integer,List<Integer>> vertex = new HashMap<Integer,List<Integer>>();
+		for(int i=m;i<n+1;i++){
+			for(int j=p;j<q+1;j++){
+				List<SnapPoint> pslist = gi.getPointsFromGrid(i, j);
+				for(SnapPoint sp : pslist){
+					nodelist.add(Integer.parseInt(sp.getId()));
+				}
+			}
+		}
+		for(int i=0;i<nodelist.size();i++){
+			for(int j=0;j<nodelist.size();j++){
+				if(vertexMap.get(nodelist.get(i)).contains(nodelist.get(j))){
+					if (vertex.containsKey(nodelist.get(i))) {
+						vertex.get(nodelist.get(i)).add(nodelist.get(j));
+					} else {
+						List<Integer> tmp = new ArrayList<Integer>();
+						tmp.add(nodelist.get(j));
+						vertex.put(nodelist.get(i), tmp);
+					}
+				}
+			}
+		}
+		List<Integer> exactway=Floyd(nodelist,vertex, nodeid1,  nodeid2);
+		return exactway;
+	}
+
+	private List<Integer> Floyd(List<Integer> nodelist,
+			Map<Integer, List<Integer>> vertex, int nodeid1, int nodeid2) {
+		
+		return null;
+	}
+
+	/**
+	 * 返回两条边之间比较近的两点
+	 * 
+	 * @param edgeid1
+	 * @param edgeid2
+	 * @return
+	 */
+	private String getTwoNearNode(Integer edgeid1, Integer edgeid2) {
+		MapEdge edge1 = edgeMap.get(edgeid1);
+		MapEdge edge2 = edgeMap.get(edgeid2);
+		MapNode node11 = nodeMap.get(edge1.getStartNode());
+		MapNode node12 = nodeMap.get(edge1.getEndNode());
+		MapNode node21 = nodeMap.get(edge2.getStartNode());
+		MapNode node22 = nodeMap.get(edge2.getEndNode());
+		double d1 = LineSpace(node11.getLat(), node11.getLng(),
+				node21.getLat(), node21.getLng());
+		double d2 = LineSpace(node12.getLat(), node12.getLng(),
+				node21.getLat(), node21.getLng());
+		double d3 = LineSpace(node11.getLat(), node11.getLng(),
+				node22.getLat(), node22.getLng());
+		double d4 = LineSpace(node12.getLat(), node12.getLng(),
+				node22.getLat(), node22.getLng());
+		double min = d1;
+		if (min > d2) {
+			min = d2;
+		}
+		if (min > d3) {
+			min = d3;
+		}
+		if (min > d4) {
+			min = d4;
+		}
+		if (min == d1) {
+			return (node11.getNodeId() + "+" + node21.getNodeId());
+		} else if (min == d2) {
+			return (node12.getNodeId() + "+" + node21.getNodeId());
+		} else if (min == d3) {
+			return (node11.getNodeId() + "+" + node22.getNodeId());
+		} else {
+			return (node12.getNodeId() + "+" + node22.getNodeId());
+		}
+	}
+
+	/**
+	 * 轨迹点匹配路网
+	 * 
+	 * @param lat
+	 *            维度
+	 * @param lng
+	 *            经度
+	 * @return
+	 */
 	private MapEdge getNearEdge(double lat, double lng) {
 		MapEdge e = null;
 		double distance = 1000;
-		Iterator iter = edgeMap.entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			MapEdge tempE = (MapEdge) entry.getValue();
+		for (Integer i : edgeMap.keySet()) {
+			MapEdge tempE = edgeMap.get(i);
 			int node1 = tempE.getStartNode();
 			int node2 = tempE.getEndNode();
 			double tempDistance = getDistance(lat, lng, node1, node2);
@@ -150,20 +343,57 @@ public class Graph {
 		return e;
 	}
 
-	// 点到直线距离
+	/**
+	 * 轨迹点匹配路标网
+	 * 
+	 * @param lat
+	 *            维度
+	 * @param lng
+	 *            经度
+	 * @return
+	 */
+	private MapEdge getNearEdge(double lat, double lng,
+			List<Integer> landMarknode) {
+		MapEdge e = null;
+		double distance = 1000;
+		for (Integer landmarkid : landMarknode) {
+			MapEdge tempE = edgeMap.get(landmarkid);
+			int node1 = tempE.getStartNode();
+			int node2 = tempE.getEndNode();
+			double tempDistance = getDistance(lat, lng, node1, node2);
+			if (tempDistance < distance) {
+				distance = tempDistance;
+				e = tempE;
+			}
+		}
+		// System.out.println(e.getEdgeId()+" "+distance);
+		return e;
+	}
+
+	/**
+	 * 点到直线距离
+	 * 
+	 * @param lat
+	 *            维度
+	 * @param lng
+	 *            经度
+	 * @param node1
+	 * @param node2
+	 * @return
+	 */
 	private double getDistance(double lat, double lng, int node1, int node2) {
 		MapNode n1 = nodeMap.get(node1);
 		MapNode n2 = nodeMap.get(node2);
-		double x1 = n1.getxPoint();
-		double y1 = n1.getyPoint();
-		double x2 = n2.getxPoint();
-		double y2 = n2.getyPoint();
+		double x1 = n1.getLat();
+		double y1 = n1.getLng();
+		double x2 = n2.getLat();
+		double y2 = n2.getLng();
 		// System.out.println(x0+" "+y0+" "+x1+" "+y1+" "+x2+" "+y2);
 		double space = 0;
 		double a, b, c;
-		a = lineSpace(x1, y1, x2, y2);// 线段的长度
-		b = lineSpace(x1, y1, lat, lng);// (x1,y1)到点的距离
-		c = lineSpace(x2, y2, lat, lng);// (x2,y2)到点的距离
+		a = LineSpace(x1, y1, x2, y2);// 线段的长度
+		b = LineSpace(x1, y1, lat, lng);// (x1,y1)到点的距离
+		c = LineSpace(x2, y2, lat, lng);// (x2,y2)到点的距离
 		if (c <= 0.000001 || b <= 0.000001) {
 			space = 0;
 			return space;
@@ -186,23 +416,19 @@ public class Graph {
 		return space;
 	}
 
-	private double lineSpace(double x1, double y1, double x2, double y2) {
+	/**
+	 * 点到点距离
+	 * 
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @return
+	 */
+	private double LineSpace(double x1, double y1, double x2, double y2) {
 		double lineLength = 0;
 		lineLength = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 		return lineLength;
-	}
-
-	public void getroute(MapNode mapNode, MapNode mapNode2) {
-		lmg = new LandMarkGraph(edgeDensity);
-		MapEdge mapedge = getNearEdge(mapNode.getxPoint(), mapNode.getyPoint());
-		MapEdge mapedge2 = getNearEdge(mapNode2.getxPoint(),
-				mapNode2.getyPoint());
-		List<Integer> roughroute = lmg.getRoughRouting(mapedge.getEdgeId(),
-				mapedge2.getEdgeId());
-		 for (Integer i : roughroute) {
-		 System.out.println(i);
-		 }
-
 	}
 
 }
