@@ -95,7 +95,6 @@ public class GridIndex {
 		this.alAmount = lngAmount * latAmount;
 		// 建立网格二位数组
 		this.grids = new Grid[lngAmount][latAmount];
-		System.out.println(lngAmount + " " + latAmount);
 
 		// 初始化网格列表,无用网格太多，选择不初始化
 		// initGridsSub();

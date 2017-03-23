@@ -3,5 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="TraLib/TrajFramework1.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="TraLib/postgresql-42.0.0.jre6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

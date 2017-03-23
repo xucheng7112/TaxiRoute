@@ -1,6 +1,5 @@
 package xc;
 
-import datastruct.MapNode;
 import traj.database.io.TrajDataFileConfiguration;
 import traj.database.io.TrajDataFileInput;
 import traj.database.management.TrajDataFileManagement;
@@ -12,13 +11,12 @@ public class TaxiRouteCount {
 
 	public static void main(String[] args) {
 		TaxiRouteCount trc = new TaxiRouteCount();
-		trc.getroute(new MapNode(0, 40.1980209, 116.2346649), new MapNode(1,
-				39.909795959259256, 116.5940783074074));
+		trc.getroute();
 	}
 
-	private void getroute(MapNode mapNode, MapNode mapNode2) {
+	private void getroute() {
 		g = new Graph();
-		g.getroute(mapNode, mapNode2);
+		g.getroute();
 	}
 
 	/*
