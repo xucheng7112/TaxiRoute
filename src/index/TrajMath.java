@@ -84,7 +84,6 @@ public class TrajMath {
 			Map<Integer, List<Integer>> vertex, int nodeid1, int nodeid2) {
 		int nodelength;
 		nodelength = nodelist.size();
-		System.out.println(nodelength);
 		int[][] path = new int[nodelength][nodelength];
 		double[][] dist = new double[nodelength][nodelength];
 		int INF = Integer.MAX_VALUE;
@@ -137,6 +136,10 @@ public class TrajMath {
 		for (Integer i : tmp) {
 			tmpresult.add(ntonodeid.get(i));
 		}
+		for (Integer i : tmpresult) {
+			System.out.println(i);
+		}
+
 		return tmpresult;
 	}
 
@@ -224,7 +227,7 @@ public class TrajMath {
 			Class.forName("org.postgresql.Driver");
 			c = DriverManager.getConnection(
 					"jdbc:postgresql://localhost:5432/osm", "postgres",
-					"Abcd4321");
+					"117112");
 			System.out.println("Opened database successfully");
 			// 创建表
 			stmt = c.createStatement();
@@ -233,7 +236,7 @@ public class TrajMath {
 					+ " )";
 			stmt.executeUpdate(sqltable);
 			stmt.close();
-			System.out.println("Table "+tablename+ "created successfully");
+			System.out.println("Table " + tablename + "created successfully");
 			// 插入数据
 			c.setAutoCommit(false);
 			stmt = c.createStatement();

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import datastruct.MapNode;
+
 /**
  * 基于点的网格索引 Created by on 2017/3/4.
  */
@@ -16,7 +18,7 @@ public class GridIndex {
 	/**
 	 * 地图宽（东西方向），高（南北方向）
 	 */
-	private double width, height;
+	// private double width, height;
 	/**
 	 * 经度与纬度方向需要划分为多少格，一共多少格
 	 */
@@ -28,11 +30,11 @@ public class GridIndex {
 	/**
 	 * 索引包含的所有点集合（哈希表）（引用）
 	 */
-	public HashMap<String, SnapPoint> pointsHash;
+	public HashMap<String, MapNode> pointsHash;
 	/**
 	 * 索引包含的所有点集合（列表）（引用）
 	 */
-	private List<SnapPoint> pointsList;
+	private List<MapNode> pointsList;
 	/**
 	 * 初始化网格的线程规模，默认为16
 	 */
@@ -54,12 +56,12 @@ public class GridIndex {
 	 * @param ps
 	 *            需要建立索引的点集
 	 */
-	public GridIndex(MBR mapScale, double side, List<SnapPoint> ps) {
+	public GridIndex(MBR mapScale, double side, List<MapNode> ps) {
 		this.side = side;
 		// 将点的引用加进来
-		pointsHash = new HashMap<String, SnapPoint>();
+		pointsHash = new HashMap<String, MapNode>();
 		for (int i = 0; i < ps.size(); i++) {
-			pointsHash.put(ps.get(i).getId(), ps.get(i));
+			pointsHash.put(Integer.toString(ps.get(i).getNodeId()), ps.get(i));
 		}
 		pointsList = ps;
 		// 初始化经纬度边界
@@ -144,8 +146,8 @@ public class GridIndex {
 	 *            纬度索引
 	 * @return 集合副本
 	 */
-	public List<SnapPoint> getPointsFromGrid(int indexLng, int indexLat) {
-		List<SnapPoint> points = new ArrayList<SnapPoint>();
+	public List<MapNode> getPointsFromGrid(int indexLng, int indexLat) {
+		List<MapNode> points = new ArrayList<MapNode>();
 		// 溢出检查
 		if (indexLng < 0 || indexLng >= lngAmount || indexLat < 0
 				|| indexLat >= latAmount)
@@ -168,8 +170,8 @@ public class GridIndex {
 	 *            搜索范围 n不能为负
 	 * @return 附近的点集合
 	 */
-	public List<SnapPoint> getPointsFromGrids(SnapPoint p, int n) {
-		List<SnapPoint> points = new ArrayList<SnapPoint>();
+	public List<MapNode> getPointsFromGrids(MapNode p, int n) {
+		List<MapNode> points = new ArrayList<MapNode>();
 		// 溢出检查
 		if (n < 0)
 			return points;
@@ -180,7 +182,7 @@ public class GridIndex {
 		// 开始搜索
 		for (int i = indexLng - n; i <= indexLng + n; i++) {
 			for (int j = indexLat - n; j <= indexLat + n; j++) {
-				List<SnapPoint> ps = getPointsFromGrid(i, j);
+				List<MapNode> ps = getPointsFromGrid(i, j);
 				for (int x = 0; x < ps.size(); x++) {
 					points.add(ps.get(x));
 				}
@@ -220,7 +222,7 @@ public class GridIndex {
 					grids[indexPoint.indexLng][indexPoint.indexLat] = new Grid();
 				} else {
 					grids[indexPoint.indexLng][indexPoint.indexLat].substances
-							.add(pointsList.get(i).getId());
+							.add(pointsList.get(i).getNodeIdS());
 				}
 		}
 	}
@@ -231,17 +233,18 @@ public class GridIndex {
 	 * @param p
 	 *            要删去的点
 	 */
-	public void delete(SnapPoint p) {
-		IndexPoint indexPoint = getIndex(p);
-		// 删去网格中的索引
-		List<String> sub = grids[indexPoint.indexLng][indexPoint.indexLat].substances;
-		for (int i = 0; i < sub.size(); i++) {
-			if (sub.get(i).equals(p.getId()))
-				sub.remove(i);
-		}
-		// 删去字典中的这个点
-		pointsHash.remove(p.getId());
-	}
+	// public void delete(SnapPoint p) {
+	// IndexPoint indexPoint = getIndex(p);
+	// // 删去网格中的索引
+	// List<String> sub =
+	// grids[indexPoint.indexLng][indexPoint.indexLat].substances;
+	// for (int i = 0; i < sub.size(); i++) {
+	// if (sub.get(i).equals(p.getId()))
+	// sub.remove(i);
+	// }
+	// // 删去字典中的这个点
+	// pointsHash.remove(p.getId());
+	// }
 
 	/**
 	 * 计算所属下标的点
@@ -250,7 +253,7 @@ public class GridIndex {
 	 *            需要计算所属下标的点
 	 * @return 下标
 	 */
-	public IndexPoint getIndex(SnapPoint point) {
+	public IndexPoint getIndex(MapNode point) {
 		if (point.getLng() < minLng || point.getLat() < minLat
 				|| point.getLng() > maxLng || point.getLat() > maxLat)
 			return null;
@@ -408,17 +411,17 @@ public class GridIndex {
 			this.begin = begin;
 			this.end = end;
 		}
-
-		@Override
-		public void run() {
-			for (int i = begin; i <= end; i++) {
-				// 溢出检查
-				if (i >= pointsList.size())
-					break;
-				IndexPoint indexPoint = getIndex(pointsList.get(i));
-				grids[indexPoint.indexLng][indexPoint.indexLat].substances
-						.add(pointsList.get(i).getId());
-			}
-		}
+		//
+		// @Override
+		// public void run() {
+		// for (int i = begin; i <= end; i++) {
+		// // 溢出检查
+		// if (i >= pointsList.size())
+		// break;
+		// IndexPoint indexPoint = getIndex(pointsList.get(i));
+		// grids[indexPoint.indexLng][indexPoint.indexLat].substances
+		// .add(pointsList.get(i).getId());
+		// }
+		// }
 	}
 }

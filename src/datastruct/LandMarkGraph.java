@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,8 +15,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class LandMarkGraph {
-	private List<Integer> LandMarknode;
-	private Map<String, landmarkedge> landmarkedge;
+	private List<Integer> LandMarkNode = new ArrayList<Integer>();
+	private Map<String, LandMarkEdge> LandMarkEdgeMap;
 	private List<Integer> result;
 	Map<Integer, Integer> edgeDensity;
 	Map<Integer, Integer> ntonodeid; // 1,2...n与n个点的映射
@@ -27,15 +28,17 @@ public class LandMarkGraph {
 	public LandMarkGraph() {
 		initLandMarkNode();
 		initMember();
-		// ConvertTraToLandMarkSeq();
-		// CountLandMarksnode();
 		initLandMarkEdge();
-		initFloyd();
+		CountFloyd();
+//		initFlyod();
 	}
 
+	/**
+	 * 初始化成员变量
+	 */
 	private void initMember() {
 		// TODO Auto-generated method stub
-		landmarkedge = new HashMap<String, landmarkedge>();
+		LandMarkEdgeMap = new HashMap<String, LandMarkEdge>();
 		edgeDensity = new HashMap<Integer, Integer>();
 		ntonodeid = new HashMap<Integer, Integer>(); // 1,2...n与n个点的映射
 		nodeidton = new HashMap<Integer, Integer>(); // n个点与1,2...n的映射
@@ -43,27 +46,65 @@ public class LandMarkGraph {
 		dist = new double[nodelength][nodelength];
 	}
 
+	/**
+	 * 根据两点 计算roughroute
+	 * 
+	 * @param startroadid
+	 * @param endroadid
+	 * @return
+	 */
 	public List<Integer> getRoughRoute(Integer startroadid, Integer endroadid) {
 		// floyd算法
 		// startroadid = Integer.parseInt("243612");
 		// endroadid = Integer.parseInt("272565");
 		result = new ArrayList<Integer>();
-		result.add(nodeidton.get(startroadid));
 		findPath(nodeidton.get(startroadid), nodeidton.get(endroadid), path);
-		result.add(nodeidton.get(endroadid));
 		List<Integer> tmp = result;
 		result = new ArrayList<Integer>();
 		for (Integer i : tmp) {
 			result.add(ntonodeid.get(i));
 		}
+		result.add(startroadid);
+		result.add(endroadid);
 		return result;
 	}
 
-	private void initFloyd() {
+	/**
+	 * 初始化floyd的PATH矩阵
+	 */
+	private void initFlyod() {
+		for (int i = 0; i < nodelength; i++) {
+			ntonodeid.put(i, LandMarkNode.get(i));
+			nodeidton.put(LandMarkNode.get(i), i);
+		}
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(
+					"G:/taxidata/mapMatchingResult/FloydPath.txt"));
+			String thisLine = null;
+			int row = 0;
+			while ((thisLine = br.readLine()) != null) {
+				String[] s = thisLine.split(";");
+				for (int j = 0; j < s.length; j++) {
+					path[row][j] = Integer.parseInt(s[j]);
+				}
+				row++;
+			}
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 计算floyd矩阵并保存
+	 */
+	@SuppressWarnings("unused")
+	private void CountFloyd() {
 		int INF = Integer.MAX_VALUE;
 		for (int i = 0; i < nodelength; i++) {
-			ntonodeid.put(i, LandMarknode.get(i));
-			nodeidton.put(LandMarknode.get(i), i);
+			ntonodeid.put(i, LandMarkNode.get(i));
+			nodeidton.put(LandMarkNode.get(i), i);
 		}
 		double[][] matrix = new double[nodelength][nodelength];
 		for (int i = 0; i < nodelength; i++) {
@@ -71,11 +112,11 @@ public class LandMarkGraph {
 				matrix[i][j] = INF;
 			}
 		}
-		for (String s : landmarkedge.keySet()) {
+		for (String s : LandMarkEdgeMap.keySet()) {
 			String[] roadid = s.split("\\+");
 			Integer road1 = Integer.parseInt(roadid[0]);
 			Integer road2 = Integer.parseInt(roadid[1]);
-			matrix[nodeidton.get(road1)][nodeidton.get(road2)] = landmarkedge
+			matrix[nodeidton.get(road1)][nodeidton.get(road2)] = LandMarkEdgeMap
 					.get(s).getTime();
 		}
 
@@ -98,6 +139,34 @@ public class LandMarkGraph {
 				}
 			}
 		}
+		SavePathAndDist(path);
+	}
+
+	/**
+	 * 保存floyd的PATH矩阵
+	 * 
+	 * @param path
+	 */
+	private void SavePathAndDist(int[][] path) {
+		try {
+			BufferedWriter bwPath = new BufferedWriter(new FileWriter(
+					"G:/taxidata/mapMatchingResult/FloydPath.txt"));
+			System.out.println(nodelength);
+			for (int i = 0; i < nodelength; i++) {
+				String line = "";
+				for (int j = 0; j < nodelength; j++) {
+					line += path[i][j] + ";";
+				}
+				bwPath.write(line);
+				bwPath.newLine();
+			}
+			bwPath.flush();
+			bwPath.close();
+		} catch (IOException e) {
+		} finally {
+			System.out.println("Floyd Path矩阵保存完毕");
+		}
+
 	}
 
 	private void findPath(int i, int j, int[][] path) {
@@ -110,9 +179,72 @@ public class LandMarkGraph {
 	}
 
 	/**
-	 * get top-4000 land
+	 * 第二步 roadseqence转换成landmarkseqence
 	 */
-	public void CountLandMarksnode() {
+	@SuppressWarnings("unused")
+	private void ConvertTraToLandMarkSeq() {
+		try {
+			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
+			File file = new File(path);
+			File[] filelist = file.listFiles();
+			for (int i = 0; i < filelist.length; i++) {
+				String filename = filelist[i].getAbsolutePath();
+				String thisLine = null;
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				BufferedWriter bw = new BufferedWriter(new FileWriter(
+						"G:/taxidata/mapMatchingResult/LandMarkSeqence/LandSeqence "
+								+ filelist[i].getName()));
+				while ((thisLine = br.readLine()) != null) {
+					if (thisLine.length() != 1) {
+						String[] a = thisLine.split(";");
+						int roadid = Integer.parseInt(a[0].trim());
+						if (LandMarkNode.contains(roadid)) {
+							bw.write(a[0] + ";" + a[1]);
+							bw.newLine();
+						}
+					} else {
+						bw.write(" ");
+						bw.newLine();
+					}
+				}
+				bw.flush();
+				bw.close();
+				br.close();
+				System.out.println(filelist[i].getName() + " 转换完毕");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+
+	}
+
+	/**
+	 * 初始化landmarknode地标信息
+	 * 
+	 */
+	private void initLandMarkNode() {
+		try {
+			String thisLine = null;
+			BufferedReader br = new BufferedReader(new FileReader(
+					"G:/taxidata/mapMatchingResult/landmarknode.txt"));
+			while ((thisLine = br.readLine()) != null) {
+				int a = Integer.parseInt(thisLine);
+				LandMarkNode.add(a);
+			}
+			br.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			nodelength = LandMarkNode.size();
+		}
+	}
+
+	/**
+	 *  第一步 计算出landmarknode并保存
+	 */
+	@SuppressWarnings("unused")
+	private void CountLandMarknode() {
 		try {
 			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
 			File file = new File(path);
@@ -148,7 +280,7 @@ public class LandMarkGraph {
 						}
 					});
 			// 遍历前4000，保存
-			String filename = "G:/taxidata/mapMatchingResult/top-4000.txt";
+			String filename = "G:/taxidata/mapMatchingResult/landmarknode.txt";
 			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
 			for (int i = 0; i < 4000; i++) {
 				Entry<Integer, Integer> mapping = list.get(i);
@@ -160,77 +292,43 @@ public class LandMarkGraph {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			System.out.println("密度统计完毕");
+			System.out.println("landmarknode统计完毕");
 		}
 	}
 
 	/**
-	 * roadseqence转换成landmarkseqence
+	 * 初始化landmarkedge地标信息
 	 */
-	public void ConvertTraToLandMarkSeq() {
+	private void initLandMarkEdge() {
 		try {
-			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
-			File file = new File(path);
-			File[] filelist = file.listFiles();
-			for (int i = 0; i < filelist.length; i++) {
-				String filename = filelist[i].getAbsolutePath();
-				String thisLine = null;
-				BufferedReader br = new BufferedReader(new FileReader(filename));
-				BufferedWriter bw = new BufferedWriter(new FileWriter(
-						"G:/taxidata/mapMatchingResult/LandMarkSeqence/LandSeqence "
-								+ filelist[i].getName()));
-				while ((thisLine = br.readLine()) != null) {
-					if (thisLine.length() != 1) {
-						String[] a = thisLine.split(";");
-						int roadid = Integer.parseInt(a[0].trim());
-						if (LandMarknode.contains(roadid)) {
-							System.out.println(roadid);
-							bw.write(a[0] + ";" + a[1]);
-							bw.newLine();
-						}
-					} else {
-						bw.write(" ");
-						bw.newLine();
-					}
-				}
-				bw.flush();
-				bw.close();
-				br.close();
-				System.out.println(filelist[i].getName() + " 转换完毕");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		}
-
-	}
-
-	/**
-	 * 初始化landmarknode地标信息
-	 * 
-	 */
-	private void initLandMarkNode() {
-		try {
-			LandMarknode = new ArrayList<Integer>();
 			String thisLine = null;
 			BufferedReader br = new BufferedReader(new FileReader(
-					"G:/taxidata/mapMatchingResult/top-4000.txt"));
+					"G:/taxidata/mapMatchingResult/landmarkedge.txt"));
 			while ((thisLine = br.readLine()) != null) {
-				int a = Integer.parseInt(thisLine);
-				LandMarknode.add(a);
+				String[] s = thisLine.split(";");
+				LandMarkEdge lme = new LandMarkEdge();
+				lme.setLandmarkedgeID(s[0]);
+				lme.setStartEdgeID(Integer.parseInt(s[1]));
+				lme.setEndEdgeID(Integer.parseInt(s[2]));
+				for (int i = 0; i < 24; i++) {
+					lme.setWorkdayTimeSplit(i, Double.parseDouble(s[i + 3]));
+					lme.setWorkdayTimeSplit(i, Double.parseDouble(s[i + 27]));
+				}
+				LandMarkEdgeMap.put(s[0], lme);
 			}
 			br.close();
-		} catch (Exception e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			nodelength = LandMarknode.size();
 		}
 	}
 
 	/**
-	 * 根据landmark和所有轨迹 初始化landmarkedge
+	 * 第三步 计算出landmarkedge并保存
+	 * @throws IOException
 	 */
-	public void initLandMarkEdge() {
+	@SuppressWarnings("unused")
+	private void CountLandMarkEdge() {
 		// 统计candidate密度
 		Map<String, List<String>> candidateedge = new HashMap<String, List<String>>();
 		try {
@@ -244,9 +342,7 @@ public class LandMarkGraph {
 				BufferedReader br = new BufferedReader(new FileReader(filename));
 				oneLine = br.readLine();
 				String[] s1 = oneLine.split(";");
-				while ((br.readLine()).length() == 1) {
-					br.readLine();
-				}
+				System.out.println(filename);
 				while ((twoLine = br.readLine()) != null) {
 					if (twoLine.length() != 1) {
 						String[] s2 = twoLine.split(";");
@@ -277,26 +373,41 @@ public class LandMarkGraph {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			// for (String key : candidateedge.keySet()) {
-			// System.out.println(key);
-			// List<String> value = candidateedge.get(key);
-			// for (int i = 0; i < value.size(); i++) {
-			// System.out.println(value.get(i));
-			// }
-			// System.out.println();
-			// System.out.println();
-			// }
-			// System.out.println(candidateedge.size());
 		}
 		// System.out.println("~~~~~~~~~~~~~");
 		// 从candidateedge候选边到landmarkedge
 		for (String key : candidateedge.keySet()) {
 			if (candidateedge.get(key).size() >= 10) {
-				landmarkedge.put(key,
-						new landmarkedge(key, candidateedge.get(key)));
+				LandMarkEdgeMap.put(key,
+						new LandMarkEdge(key, candidateedge.get(key)));
 			}
 		}
-		// System.out.println(landmarkedge.size());
+		String filename = "G:/taxidata/mapMatchingResult/landmarkedge.txt";
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+			for (String key : LandMarkEdgeMap.keySet()) {
+				LandMarkEdge lme = LandMarkEdgeMap.get(key);
+				String line = "";
+				line += key + ";";
+				line += lme.getStartEdgeID() + ";";
+				line += lme.getEndEdgeID() + ";";
+				for (int i = 0; i < 24; i++) {
+					line += lme.getWorkdayTimeSplit(i) + ";";
+				}
+				for (int i = 0; i < 24; i++) {
+					line += lme.getWeekendTimeSplit(i) + ";";
+				}
+				bw.write(line);
+				bw.newLine();
+			}
+			bw.flush();
+			bw.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			System.out.println("landmarkedge保存完毕");
+		}
+
 	}
 
 	/**
@@ -315,7 +426,7 @@ public class LandMarkGraph {
 	}
 
 	public List<Integer> getLandMarknode() {
-		return LandMarknode;
+		return LandMarkNode;
 	}
 
 }

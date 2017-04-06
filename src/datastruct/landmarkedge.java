@@ -1,23 +1,25 @@
 package datastruct;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-public class landmarkedge {
+import com.sun.xml.internal.fastinfoset.algorithm.BuiltInEncodingAlgorithm.WordListener;
+
+public class LandMarkEdge {
 	String landmarkedgeID;
 	int startEdgeID;
 	int endEdgeID;
-	double time;
 	double[] weekendTimeSplit;
 	double[] workdayTimeSplit;
 
-	public landmarkedge(String landmarkedgeID, List<String> timelist) {
+	public LandMarkEdge(String landmarkedgeID, List<String> timelist) {
 		this.landmarkedgeID = landmarkedgeID;
 		startEdgeID = Integer.parseInt(landmarkedgeID.split("\\+")[0]);
 		endEdgeID = Integer.parseInt(landmarkedgeID.split("\\+")[1]);
-		time = 2.33;
 		weekendTimeSplit = new double[24];
 		workdayTimeSplit = new double[24];
 		for (int i = 0; i < 24; i++) {
@@ -27,11 +29,19 @@ public class landmarkedge {
 		CountTimeSplit(timelist);
 		// System.out.println(landmarkedgeID + "  " + startEdgeID + "  "
 		// + endEdgeID);
-
 	}
 
+	public LandMarkEdge() {
+		weekendTimeSplit = new double[24];
+		workdayTimeSplit = new double[24];
+	}
+
+	/**
+	 * 遍历所有符合条件的时间，分配到对应的时间段
+	 * 
+	 * @param timelist
+	 */
 	private void CountTimeSplit(List<String> timelist) {
-		// 遍历所有符合条件的时间，分配到对应的时间段
 		HashMap<Integer, List<Integer>> weekendmap = new HashMap<Integer, List<Integer>>();
 		HashMap<Integer, List<Integer>> workdaymap = new HashMap<Integer, List<Integer>>();
 		List<Integer> weekend = new ArrayList<Integer>() {
@@ -57,7 +67,6 @@ public class landmarkedge {
 					List<Integer> hourtimelist = new ArrayList<Integer>();
 					hourtimelist.add(Integer.parseInt(s[2]));
 					weekendmap.put(Integer.parseInt(s[1]), hourtimelist);
-
 				}
 			} else {
 				if (workdaymap.containsKey(Integer.parseInt(s[1]))) {
@@ -76,20 +85,20 @@ public class landmarkedge {
 				List<Integer> hourtimelist = weekendmap.get(i);
 				double modetime = getModeTime(hourtimelist);
 				weekendTimeSplit[i] = modetime;
-				time = modetime;
 			}
 			if (workdaymap.containsKey(i)) {
 				List<Integer> hourtimelist = workdaymap.get(i);
 				double modetime = getModeTime(hourtimelist);
 				workdayTimeSplit[i] = modetime;
-				time = modetime;
 			}
 		}
 		// 没有众数的以平均时间来替代
 		fixTimeSplit();
-
 	}
 
+	/**
+	 * 对于未被覆盖的时间段，用其他时间的平均时间来表示
+	 */
 	private void fixTimeSplit() {
 		double t1 = 0, t2 = 0;
 		int count1 = 0, count2 = 0;
@@ -116,11 +125,15 @@ public class landmarkedge {
 				workdayTimeSplit[i] = averageworkdaytime;
 			}
 		}
-
 	}
 
+	/**
+	 * 获取当前时间段的中位数
+	 * 
+	 * @param hourtimelist
+	 * @return
+	 */
 	private double getModeTime(List<Integer> hourtimelist) {
-		// TODO Auto-generated method stub
 		Map<Integer, Integer> modetimemap = new HashMap<Integer, Integer>();
 		for (Integer time : hourtimelist) {
 			if (modetimemap.containsKey(time)) {
@@ -142,6 +155,22 @@ public class landmarkedge {
 		return modetime;
 	}
 
+	/**
+	 * 返回当前路段，当前日期，当前时间通过所需时间
+	 * 
+	 * @return
+	 */
+	public double getTime() {
+		Calendar calendar = Calendar.getInstance(Locale.CHINA);
+		int Week = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+		int hour = calendar.get(Calendar.HOUR_OF_DAY);
+		if (Week == 1 || Week == 0) {
+			return weekendTimeSplit[hour];
+		} else {
+			return workdayTimeSplit[hour];
+		}
+	}
+
 	public int getStartEdgeID() {
 		return startEdgeID;
 	}
@@ -150,7 +179,36 @@ public class landmarkedge {
 		return endEdgeID;
 	}
 
-	public double getTime() {
-		return time;
+	public double getWeekendTimeSplit(int i) {
+		return weekendTimeSplit[i];
 	}
+
+	public double getWorkdayTimeSplit(int i) {
+		return workdayTimeSplit[i];
+	}
+
+	public void setWeekendTimeSplit(int i, double time) {
+		this.weekendTimeSplit[i] = time;
+	}
+
+	public void setWorkdayTimeSplit(int i, double time) {
+		this.workdayTimeSplit[i] = time;
+	}
+
+	public String getLandmarkedgeID() {
+		return landmarkedgeID;
+	}
+
+	public void setLandmarkedgeID(String landmarkedgeID) {
+		this.landmarkedgeID = landmarkedgeID;
+	}
+
+	public void setStartEdgeID(int startEdgeID) {
+		this.startEdgeID = startEdgeID;
+	}
+
+	public void setEndEdgeID(int endEdgeID) {
+		this.endEdgeID = endEdgeID;
+	}
+
 }

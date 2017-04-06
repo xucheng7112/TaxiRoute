@@ -51,10 +51,11 @@ public class Graph {
 		vertexMap = new HashMap<Integer, List<Integer>>();
 		nodeMap = new HashMap<Integer, MapNode>();
 		edgeMap = new HashMap<Integer, MapEdge>();
+		System.out.println("正在初始化路网：");
 		init("MapData/edges.txt", "MapData/vertices.txt");
-		System.out.println("初始化地图完毕");
+		System.out.println("正在初始化网格索引：");
 		initGridindex();
-		System.out.println("初始化网格索引完毕");
+
 	}
 
 	/**
@@ -63,12 +64,10 @@ public class Graph {
 	private void initGridindex() {
 		MBR mapScale = new MBR(115.416666, 39.43333, 117.5000, 41.05);// 地图边界经纬度
 		double side = 2000;
-		List<SnapPoint> ps = new ArrayList<SnapPoint>();
+		List<MapNode> ps = new ArrayList<MapNode>();
 		for (Integer i : nodeMap.keySet()) {
 			MapNode node = nodeMap.get(i);
-			SnapPoint sp = new SnapPoint(node.getLng(), node.getLat(), null,
-					node.getNodeIdS());
-			ps.add(sp);
+			ps.add(node);
 		}
 		gi = new GridIndex(mapScale, side, ps);
 	}
@@ -187,72 +186,69 @@ public class Graph {
 	 */
 	@SuppressWarnings("resource")
 	public void getroute() {
-		Scanner sc = new Scanner(System.in);
+		System.out.println("正在初始化轨迹计算环境：");
 		lmg = new LandMarkGraph();
-		System.out.println("初始化地标图完毕");
+		Scanner sc = new Scanner(System.in);
 		int count = 10;
-		while (count != -1) {
-			System.out.println("请依次输入起点的id，Lat，Lng：");
-			MapNode mapNode = new MapNode(sc.nextInt(), sc.nextDouble(),
-					sc.nextDouble());
-			System.out.println("请依次输入终点的id，Lat，Lng：");
-			MapNode mapNode2 = new MapNode(sc.nextInt(), sc.nextDouble(),
-					sc.nextDouble());
-			MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
-					lmg.getLandMarknode());
-			MapEdge mapedge2 = getNearEdge(mapNode2.getLat(),
-					mapNode2.getLng(), lmg.getLandMarknode());
-			List<Integer> roughroute = lmg.getRoughRoute(mapedge.getEdgeId(),
-					mapedge2.getEdgeId());
-			System.out.println("RoughRoute匹配完毕");
-			List<Integer> finalresult = new ArrayList<Integer>();
-			for (int a = 0; a < roughroute.size() - 1; a++) {
-				Integer roughroadid = roughroute.get(a);
-				if (!finalresult.contains(edgeMap.get(roughroadid)
-						.getStartNode())) {
-					finalresult.add(edgeMap.get(roughroadid).getStartNode());
-				}
-				if (!finalresult
-						.contains(edgeMap.get(roughroadid).getEndNode())) {
-					finalresult.add(edgeMap.get(roughroadid).getEndNode());
-				}
-				String twonodeid = getTwoNearNode(roughroute.get(a),
-						roughroute.get(a + 1));
-				List<Integer> exactway = getExactRoute(
-						Integer.parseInt(twonodeid.split("\\+")[0]),
-						Integer.parseInt(twonodeid.split("\\+")[1]));
-				// for (Integer i : exactway) {
-				// System.out.println(i + " ");
-				// }
-				if (exactway != null) {
-					for (Integer i : exactway) {
-						if (!finalresult.contains(i)) {
-							finalresult.add(i);
-						}
-					}
-				}
-				// System.out.println("once");
-			}
-			if (!finalresult.contains(edgeMap.get(
-					roughroute.get(roughroute.size() - 1)).getStartNode())) {
-				finalresult.add(edgeMap.get(
-						roughroute.get(roughroute.size() - 1)).getStartNode());
-			}
-			if (!finalresult.contains(edgeMap.get(
-					roughroute.get(roughroute.size() - 1)).getEndNode())) {
-				finalresult.add(edgeMap.get(
-						roughroute.get(roughroute.size() - 1)).getEndNode());
-			}
-			List<MapNode> finalresultnodels = new ArrayList<MapNode>();
-			for (Integer i : finalresult) {
-				// System.out.println(nodeMap.get(i).getLng() + ","
-				// + nodeMap.get(i).getLat());
-				MapNode node = nodeMap.get(i);
-				finalresultnodels.add(node);
-			}
-			TrajMath.LeadingIntoPostgreSql(finalresultnodels, "table" + count);
-			count++;
-		}
+//		while (count != -1) {
+//			System.out.println("请依次输入起点的id，Lat，Lng：");
+//			MapNode mapNode = new MapNode(sc.nextInt(), sc.nextDouble(),
+//					sc.nextDouble());
+//			System.out.println("请依次输入终点的id，Lat，Lng：");
+//			MapNode mapNode2 = new MapNode(sc.nextInt(), sc.nextDouble(),
+//					sc.nextDouble());
+//			MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
+//					lmg.getLandMarknode());
+//			MapEdge mapedge2 = getNearEdge(mapNode2.getLat(),
+//					mapNode2.getLng(), lmg.getLandMarknode());
+//			List<Integer> roughroute = lmg.getRoughRoute(mapedge.getEdgeId(),
+//					mapedge2.getEdgeId());
+//			System.out.println("RoughRoute匹配完毕");
+//			List<Integer> finalresult = new ArrayList<Integer>();
+//			for (int a = 0; a < roughroute.size() - 1; a++) {
+//				Integer roughroadid = roughroute.get(a);
+//				if (!finalresult.contains(edgeMap.get(roughroadid)
+//						.getStartNode())) {
+//					finalresult.add(edgeMap.get(roughroadid).getStartNode());
+//				}
+//				if (!finalresult
+//						.contains(edgeMap.get(roughroadid).getEndNode())) {
+//					finalresult.add(edgeMap.get(roughroadid).getEndNode());
+//				}
+//				String twonodeid = getTwoNearNode(roughroute.get(a),
+//						roughroute.get(a + 1));
+//				List<Integer> exactway = getExactRoute(
+//						Integer.parseInt(twonodeid.split("\\+")[0]),
+//						Integer.parseInt(twonodeid.split("\\+")[1]));
+//				if (exactway != null) {
+//					for (Integer i : exactway) {
+//						if (!finalresult.contains(i)) {
+//							finalresult.add(i);
+//						}
+//					}
+//				}
+//				// System.out.println("once");
+//			}
+//			if (!finalresult.contains(edgeMap.get(
+//					roughroute.get(roughroute.size() - 1)).getStartNode())) {
+//				finalresult.add(edgeMap.get(
+//						roughroute.get(roughroute.size() - 1)).getStartNode());
+//			}
+//			if (!finalresult.contains(edgeMap.get(
+//					roughroute.get(roughroute.size() - 1)).getEndNode())) {
+//				finalresult.add(edgeMap.get(
+//						roughroute.get(roughroute.size() - 1)).getEndNode());
+//			}
+//			List<MapNode> finalresultnodels = new ArrayList<MapNode>();
+//			for (Integer i : finalresult) {
+//				// System.out.println(nodeMap.get(i).getLng() + ","
+//				// + nodeMap.get(i).getLat());
+//				finalresultnodels.add(nodeMap.get(i));
+//			}
+//			System.out.println("导入数据库中：");
+//			TrajMath.LeadingIntoPostgreSql(finalresultnodels, "table" + count);
+//			count++;
+//		}
 	}
 
 	/**
@@ -283,9 +279,9 @@ public class Graph {
 		nodelist.add(nodeid2);
 		for (int i = m; i < n + 1; i++) {
 			for (int j = p; j < q + 1; j++) {
-				List<SnapPoint> pslist = gi.getPointsFromGrid(i, j);
-				for (SnapPoint sp : pslist) {
-					nodelist.add(Integer.parseInt(sp.getId()));
+				List<MapNode> pslist = gi.getPointsFromGrid(i, j);
+				for (MapNode node : pslist) {
+					nodelist.add(node.getNodeId());
 				}
 			}
 		}
