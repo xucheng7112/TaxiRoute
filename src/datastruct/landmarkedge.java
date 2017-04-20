@@ -56,7 +56,6 @@ public class LandMarkEdge {
 				add(25);
 			}
 		};
-
 		for (String dayhourtime : timelist) {
 			String[] s = dayhourtime.split("\\+");
 			if (weekend.contains(Integer.parseInt(s[0]))) {
@@ -112,10 +111,19 @@ public class LandMarkEdge {
 				count2++;
 			}
 		}
-		double averageweekendtime = Double.parseDouble(String.format("%1$.2f",
-				t1 / count1));
-		double averageworkdaytime = Double.parseDouble(String.format("%1$.2f",
-				t2 / count2));
+		double averageweekendtime, averageworkdaytime;
+		if (count1 == 0) {
+			averageweekendtime = 10.0;
+		} else {
+			averageweekendtime = Double.parseDouble(String.format("%1$.2f", t1
+					/ count1));
+		}
+		if (count2 == 0) {
+			averageworkdaytime = 10.0;
+		} else {
+			averageworkdaytime = Double.parseDouble(String.format("%1$.2f", t2
+					/ count2));
+		}
 		;
 		for (int i = 0; i < 24; i++) {
 			if (weekendTimeSplit[i] == -1) {
@@ -164,11 +172,11 @@ public class LandMarkEdge {
 		Calendar calendar = Calendar.getInstance(Locale.CHINA);
 		int Week = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 		int hour = calendar.get(Calendar.HOUR_OF_DAY);
-		if (Week == 1 || Week == 0) {
-			return weekendTimeSplit[hour];
-		} else {
-			return workdayTimeSplit[hour];
-		}
+		 if (Week == 1 || Week == 0) {
+		 return weekendTimeSplit[hour];
+		 } else {
+		 return workdayTimeSplit[hour];
+		 }
 	}
 
 	public int getStartEdgeID() {

@@ -4,6 +4,8 @@ import index.*;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -134,49 +136,37 @@ public class Graph {
 	 * @param tdfi
 	 * @param id
 	 */
-	public void mapMatching(TrajDataFileInput tdfi, int id) {
+	public void mapMatching() {
 		// 路网匹配
-		String filename = "H:/taxidata/mapMatchingResult/" + id + "-0" + ".txt";
-		int index = 0;
-		int count = 0;
-		while (tdfi.hasNextTrajectory()) {
-			if (count > 499) {
-				index++;
-				count -= 500;
-				filename = "H:/taxidata/mapMatchingResult/" + id + "-" + index
-						+ ".txt";
-			} else {
-				count++;
-			}
-			Trajectory tra = tdfi.readTrajectory();
-			List<Point> tralist = tra.getTrajPtList();
-			List<String> traresult = new ArrayList<String>();
-			List<Integer> temp = new ArrayList<Integer>();
-			for (int i = 0; i < tra.size(); i++) {
-				Point p = tralist.get(i);
-				MapEdge mapedge = getNearEdge(p.getLat(), p.getLng());
-				if (!temp.contains(mapedge.getEdgeId())) {
-					temp.add(mapedge.getEdgeId());
-					traresult.add(mapedge.getEdgeId() + " ; " + p.getTime());
-				}
-			}
-			// 保存倒文件
+		MBR mapScale = new MBR(115.416666, 39.43333, 117.5000, 41.05);// 地图边界经纬度
+		double side = 1000;
+		MapMatchingGridIndex MMGI= new MapMatchingGridIndex(mapScale, side);
+		String path = "G:/TrajectoryData/test";
+		File file = new File(path);
+		File[] filelist = file.listFiles();
+		for (int i = 0; i < filelist.length; i++) {
+			String filename = filelist[i].getAbsolutePath();
+			int roadid=-1;
 			try {
-				BufferedWriter bw = new BufferedWriter(new FileWriter(filename,
-						true));
-				for (String mapre : traresult) {
-					bw.write(mapre);
-					bw.newLine();
+				String thisLine = null;
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				BufferedWriter bw = new BufferedWriter(new FileWriter("G:/TrajectoryData/test/1.txt"));
+				while((thisLine=br.readLine())!=null){
+					String[] a=thisLine.split(",");
+					int tmproadid=MMGI.getRoadIDFromGrids(new MapNode(0, Double.parseDouble(a[2]),Double.parseDouble(a[1])));
+					if(tmproadid!=roadid && tmproadid!=-1){
+						bw.write(tmproadid+";"+a[3]);
+						bw.newLine();
+						roadid=tmproadid;
+					}
 				}
-				bw.write(" ");
-				bw.newLine();
 				bw.flush();
 				bw.close();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			} finally {
-				System.out.println("车辆" + tra.getTrajID() + "匹配结束");
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
+			System.out.println(filename+"   匹配完毕");
 		}
 
 	}
@@ -190,65 +180,65 @@ public class Graph {
 		lmg = new LandMarkGraph();
 		Scanner sc = new Scanner(System.in);
 		int count = 10;
-//		while (count != -1) {
-//			System.out.println("请依次输入起点的id，Lat，Lng：");
-//			MapNode mapNode = new MapNode(sc.nextInt(), sc.nextDouble(),
-//					sc.nextDouble());
-//			System.out.println("请依次输入终点的id，Lat，Lng：");
-//			MapNode mapNode2 = new MapNode(sc.nextInt(), sc.nextDouble(),
-//					sc.nextDouble());
-//			MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
-//					lmg.getLandMarknode());
-//			MapEdge mapedge2 = getNearEdge(mapNode2.getLat(),
-//					mapNode2.getLng(), lmg.getLandMarknode());
-//			List<Integer> roughroute = lmg.getRoughRoute(mapedge.getEdgeId(),
-//					mapedge2.getEdgeId());
-//			System.out.println("RoughRoute匹配完毕");
-//			List<Integer> finalresult = new ArrayList<Integer>();
-//			for (int a = 0; a < roughroute.size() - 1; a++) {
-//				Integer roughroadid = roughroute.get(a);
-//				if (!finalresult.contains(edgeMap.get(roughroadid)
-//						.getStartNode())) {
-//					finalresult.add(edgeMap.get(roughroadid).getStartNode());
-//				}
-//				if (!finalresult
-//						.contains(edgeMap.get(roughroadid).getEndNode())) {
-//					finalresult.add(edgeMap.get(roughroadid).getEndNode());
-//				}
-//				String twonodeid = getTwoNearNode(roughroute.get(a),
-//						roughroute.get(a + 1));
-//				List<Integer> exactway = getExactRoute(
-//						Integer.parseInt(twonodeid.split("\\+")[0]),
-//						Integer.parseInt(twonodeid.split("\\+")[1]));
-//				if (exactway != null) {
-//					for (Integer i : exactway) {
-//						if (!finalresult.contains(i)) {
-//							finalresult.add(i);
-//						}
-//					}
-//				}
-//				// System.out.println("once");
-//			}
-//			if (!finalresult.contains(edgeMap.get(
-//					roughroute.get(roughroute.size() - 1)).getStartNode())) {
-//				finalresult.add(edgeMap.get(
-//						roughroute.get(roughroute.size() - 1)).getStartNode());
-//			}
-//			if (!finalresult.contains(edgeMap.get(
-//					roughroute.get(roughroute.size() - 1)).getEndNode())) {
-//				finalresult.add(edgeMap.get(
-//						roughroute.get(roughroute.size() - 1)).getEndNode());
-//			}
-//			List<MapNode> finalresultnodels = new ArrayList<MapNode>();
-//			for (Integer i : finalresult) {
-//				// System.out.println(nodeMap.get(i).getLng() + ","
-//				// + nodeMap.get(i).getLat());
-//				finalresultnodels.add(nodeMap.get(i));
-//			}
-//			System.out.println("导入数据库中：");
-//			TrajMath.LeadingIntoPostgreSql(finalresultnodels, "table" + count);
-//			count++;
-//		}
+		while (count != -1) {
+			System.out.println("请依次输入起点的Lat，Lng：");
+			MapNode mapNode = new MapNode(0, sc.nextDouble(),
+					sc.nextDouble());
+			System.out.println("请依次输入终点的Lat，Lng：");
+			MapNode mapNode2 = new MapNode(1, sc.nextDouble(),
+					sc.nextDouble());
+			MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
+					lmg.getLandMarknode());
+			MapEdge mapedge2 = getNearEdge(mapNode2.getLat(),
+					mapNode2.getLng(), lmg.getLandMarknode());
+			List<Integer> roughroute = lmg.getRoughRoute(mapedge.getEdgeId(),
+					mapedge2.getEdgeId());
+			System.out.println("RoughRoute匹配完毕");
+			List<Integer> finalresult = new ArrayList<Integer>();
+			for (int a = 0; a < roughroute.size() - 1; a++) {
+				Integer roughroadid = roughroute.get(a);
+				if (!finalresult.contains(edgeMap.get(roughroadid)
+						.getStartNode())) {
+					finalresult.add(edgeMap.get(roughroadid).getStartNode());
+				}
+				if (!finalresult
+						.contains(edgeMap.get(roughroadid).getEndNode())) {
+					finalresult.add(edgeMap.get(roughroadid).getEndNode());
+				}
+				String twonodeid = getTwoNearNode(roughroute.get(a),
+						roughroute.get(a + 1));
+				List<Integer> exactway = getExactRoute(
+						Integer.parseInt(twonodeid.split("\\+")[0]),
+						Integer.parseInt(twonodeid.split("\\+")[1]));
+				if (exactway != null) {
+					for (Integer i : exactway) {
+						if (!finalresult.contains(i)) {
+							finalresult.add(i);
+						}
+					}
+				}
+				// System.out.println("once");
+			}
+			if (!finalresult.contains(edgeMap.get(
+					roughroute.get(roughroute.size() - 1)).getStartNode())) {
+				finalresult.add(edgeMap.get(
+						roughroute.get(roughroute.size() - 1)).getStartNode());
+			}
+			if (!finalresult.contains(edgeMap.get(
+					roughroute.get(roughroute.size() - 1)).getEndNode())) {
+				finalresult.add(edgeMap.get(
+						roughroute.get(roughroute.size() - 1)).getEndNode());
+			}
+			List<MapNode> finalresultnodels = new ArrayList<MapNode>();
+			for (Integer i : finalresult) {
+				// System.out.println(nodeMap.get(i).getLng() + ","
+				// + nodeMap.get(i).getLat());
+				finalresultnodels.add(nodeMap.get(i));
+			}
+			System.out.println("导入数据库中：");
+			TrajMath.LeadingIntoPostgreSql(finalresultnodels, "table" + count);
+			count++;
+		}
 	}
 
 	/**

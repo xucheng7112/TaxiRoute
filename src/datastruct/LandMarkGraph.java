@@ -28,9 +28,8 @@ public class LandMarkGraph {
 	public LandMarkGraph() {
 		initLandMarkNode();
 		initMember();
-		initLandMarkEdge();
-		CountFloyd();
-//		initFlyod();
+		// initLandMarkEdge();
+		initFlyod();
 	}
 
 	/**
@@ -157,6 +156,7 @@ public class LandMarkGraph {
 				for (int j = 0; j < nodelength; j++) {
 					line += path[i][j] + ";";
 				}
+				System.out.println(i);
 				bwPath.write(line);
 				bwPath.newLine();
 			}
@@ -241,7 +241,7 @@ public class LandMarkGraph {
 	}
 
 	/**
-	 *  第一步 计算出landmarknode并保存
+	 * 第一步 计算出landmarknode并保存
 	 */
 	@SuppressWarnings("unused")
 	private void CountLandMarknode() {
@@ -325,6 +325,7 @@ public class LandMarkGraph {
 
 	/**
 	 * 第三步 计算出landmarkedge并保存
+	 * 
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unused")
@@ -377,7 +378,7 @@ public class LandMarkGraph {
 		// System.out.println("~~~~~~~~~~~~~");
 		// 从candidateedge候选边到landmarkedge
 		for (String key : candidateedge.keySet()) {
-			if (candidateedge.get(key).size() >= 10) {
+			if (candidateedge.get(key).size() >= 1) {
 				LandMarkEdgeMap.put(key,
 						new LandMarkEdge(key, candidateedge.get(key)));
 			}
@@ -397,6 +398,7 @@ public class LandMarkGraph {
 				for (int i = 0; i < 24; i++) {
 					line += lme.getWeekendTimeSplit(i) + ";";
 				}
+				// System.out.println(line);
 				bw.write(line);
 				bw.newLine();
 			}
