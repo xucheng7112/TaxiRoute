@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import com.sun.xml.internal.fastinfoset.algorithm.BuiltInEncodingAlgorithm.WordListener;
-
 public class LandMarkEdge {
 	String landmarkedgeID;
 	int startEdgeID;
@@ -172,11 +170,11 @@ public class LandMarkEdge {
 		Calendar calendar = Calendar.getInstance(Locale.CHINA);
 		int Week = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 		int hour = calendar.get(Calendar.HOUR_OF_DAY);
-		 if (Week == 1 || Week == 0) {
-		 return weekendTimeSplit[hour];
-		 } else {
-		 return workdayTimeSplit[hour];
-		 }
+		if (Week == 1 || Week == 0) {
+			return weekendTimeSplit[hour];
+		} else {
+			return workdayTimeSplit[hour];
+		}
 	}
 
 	public int getStartEdgeID() {

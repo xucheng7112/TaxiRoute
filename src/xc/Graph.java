@@ -48,6 +48,11 @@ public class Graph {
 	 */
 	private GridIndex gi;
 
+	/**
+	 * exute路线集合，存储结果轨迹
+	 */
+	private List<Integer> tmpExactResult = new ArrayList<Integer>();
+
 	public Graph() {
 		// 初始化邻接表
 		vertexMap = new HashMap<Integer, List<Integer>>();
@@ -140,24 +145,28 @@ public class Graph {
 		// 路网匹配
 		MBR mapScale = new MBR(115.416666, 39.43333, 117.5000, 41.05);// 地图边界经纬度
 		double side = 1000;
-		MapMatchingGridIndex MMGI= new MapMatchingGridIndex(mapScale, side);
+		MapMatchingGridIndex MMGI = new MapMatchingGridIndex(mapScale, side);
 		String path = "G:/TrajectoryData/test";
 		File file = new File(path);
 		File[] filelist = file.listFiles();
 		for (int i = 0; i < filelist.length; i++) {
 			String filename = filelist[i].getAbsolutePath();
-			int roadid=-1;
+			int roadid = -1;
 			try {
 				String thisLine = null;
 				BufferedReader br = new BufferedReader(new FileReader(filename));
-				BufferedWriter bw = new BufferedWriter(new FileWriter("G:/TrajectoryData/test/1.txt"));
-				while((thisLine=br.readLine())!=null){
-					String[] a=thisLine.split(",");
-					int tmproadid=MMGI.getRoadIDFromGrids(new MapNode(0, Double.parseDouble(a[2]),Double.parseDouble(a[1])));
-					if(tmproadid!=roadid && tmproadid!=-1){
-						bw.write(tmproadid+";"+a[3]);
+				BufferedWriter bw = new BufferedWriter(new FileWriter(
+						"G:/TrajectoryData/test/1.txt"));
+				while ((thisLine = br.readLine()) != null) {
+					String[] a = thisLine.split(",");
+					int tmproadid = MMGI
+							.getRoadIDFromGrids(new MapNode(0, Double
+									.parseDouble(a[2]), Double
+									.parseDouble(a[1])));
+					if (tmproadid != roadid && tmproadid != -1) {
+						bw.write(tmproadid + ";" + a[3]);
 						bw.newLine();
-						roadid=tmproadid;
+						roadid = tmproadid;
 					}
 				}
 				bw.flush();
@@ -166,7 +175,7 @@ public class Graph {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			System.out.println(filename+"   匹配完毕");
+			System.out.println(filename + "   匹配完毕");
 		}
 
 	}
@@ -179,14 +188,12 @@ public class Graph {
 		System.out.println("正在初始化轨迹计算环境：");
 		lmg = new LandMarkGraph();
 		Scanner sc = new Scanner(System.in);
-		int count = 10;
+		int count = 21;
 		while (count != -1) {
 			System.out.println("请依次输入起点的Lat，Lng：");
-			MapNode mapNode = new MapNode(0, sc.nextDouble(),
-					sc.nextDouble());
+			MapNode mapNode = new MapNode(0, sc.nextDouble(), sc.nextDouble());
 			System.out.println("请依次输入终点的Lat，Lng：");
-			MapNode mapNode2 = new MapNode(1, sc.nextDouble(),
-					sc.nextDouble());
+			MapNode mapNode2 = new MapNode(1, sc.nextDouble(), sc.nextDouble());
 			MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
 					lmg.getLandMarknode());
 			MapEdge mapedge2 = getNearEdge(mapNode2.getLat(),
@@ -294,8 +301,7 @@ public class Graph {
 				}
 			}
 		}
-		List<Integer> exactway = TrajMath.Floyd(nodelist, vertex, nodeid1,
-				nodeid2);
+		List<Integer> exactway = Floyd(nodelist, vertex, nodeid1, nodeid2);
 		return exactway;
 	}
 
@@ -397,4 +403,86 @@ public class Graph {
 		return e;
 	}
 
+	/**
+	 * floyd算法
+	 * 
+	 * @param nodelist
+	 * @param vertex
+	 * @param nodeid1
+	 * @param nodeid2
+	 * @return
+	 */
+	public List<Integer> Floyd(List<Integer> nodelist,
+			Map<Integer, List<Integer>> vertex, int nodeid1, int nodeid2) {
+		int nodelength;
+		nodelength = nodelist.size();
+		int[][] path = new int[nodelength][nodelength];
+		double[][] dist = new double[nodelength][nodelength];
+		int INF = Integer.MAX_VALUE;
+		Map<Integer, Integer> ntonodeid = new HashMap<Integer, Integer>(); // 1,2...n
+																			// 与n个点的映射
+		Map<Integer, Integer> nodeidton = new HashMap<Integer, Integer>(); // n个点与1,2...n
+																			// 的映射
+		for (int i = 0; i < nodelength; i++) {
+			ntonodeid.put(i, nodelist.get(i));
+			nodeidton.put(nodelist.get(i), i);
+		}
+		double[][] matrix = new double[nodelength][nodelength];
+		for (int i = 0; i < nodelength; i++) {
+			for (int j = 0; j < nodelength; j++) {
+				matrix[i][j] = INF;
+			}
+		}
+		for (Integer startnodeid : vertex.keySet()) {
+			List<Integer> endnodeidlist = vertex.get(startnodeid);
+			for (Integer endnodeid : endnodeidlist) {
+				matrix[nodeidton.get(startnodeid)][nodeidton.get(endnodeid)] = TrajMath
+						.Euclid(nodeMap.get(startnodeid),
+								nodeMap.get(endnodeid));
+			}
+		}
+		int size = matrix.length;
+		// initialize dist and path
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				path[i][j] = -1;
+				dist[i][j] = matrix[i][j];
+			}
+		}
+		for (int k = 0; k < size; k++) {
+			for (int i = 0; i < size; i++) {
+				for (int j = 0; j < size; j++) {
+					if (dist[i][k] != INF && dist[k][j] != INF
+							&& dist[i][k] + dist[k][j] < dist[i][j]) {
+						dist[i][j] = dist[i][k] + dist[k][j];
+						path[i][j] = k;
+					}
+				}
+			}
+		}
+		tmpExactResult = null;
+		tmpExactResult = new ArrayList<Integer>();
+		tmpExactResult.add(nodeidton.get(nodeid1));
+		findPath(nodeidton.get(nodeid1), nodeidton.get(nodeid2), path);
+		tmpExactResult.add(nodeidton.get(nodeid2));
+		List<Integer> tmp = tmpExactResult;
+		tmpExactResult = new ArrayList<Integer>();
+		for (Integer i : tmp) {
+			tmpExactResult.add(ntonodeid.get(i));
+		}
+		for (Integer i : tmpExactResult) {
+			System.out.println(i);
+		}
+
+		return tmpExactResult;
+	}
+
+	private void findPath(int i, int j, int[][] path) {
+		int k = path[i][j];
+		if (k == -1)
+			return;
+		findPath(i, k, path); // 递归
+		tmpExactResult.add(k);
+		findPath(k, j, path);
+	}
 }

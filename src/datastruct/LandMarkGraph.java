@@ -28,7 +28,9 @@ public class LandMarkGraph {
 	public LandMarkGraph() {
 		initLandMarkNode();
 		initMember();
+		// CountLandMarkEdge();
 		// initLandMarkEdge();
+		// CountFlyod();
 		initFlyod();
 	}
 
@@ -99,7 +101,8 @@ public class LandMarkGraph {
 	 * 计算floyd矩阵并保存
 	 */
 	@SuppressWarnings("unused")
-	private void CountFloyd() {
+	private void CountFlyod() {
+		System.out.println("正在计算Floyd矩阵：");
 		int INF = Integer.MAX_VALUE;
 		for (int i = 0; i < nodelength; i++) {
 			ntonodeid.put(i, LandMarkNode.get(i));
@@ -184,7 +187,7 @@ public class LandMarkGraph {
 	@SuppressWarnings("unused")
 	private void ConvertTraToLandMarkSeq() {
 		try {
-			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
+			String path = "G:/TrajectoryData/usefulMapMatchingData";
 			File file = new File(path);
 			File[] filelist = file.listFiles();
 			for (int i = 0; i < filelist.length; i++) {
@@ -246,7 +249,7 @@ public class LandMarkGraph {
 	@SuppressWarnings("unused")
 	private void CountLandMarknode() {
 		try {
-			String path = "G:/taxidata/mapMatchingResult/RoadSeqence";
+			String path = "G:/TrajectoryData/usefulMapMatchingData";
 			File file = new File(path);
 			File[] filelist = file.listFiles();
 			// 统计密度
@@ -303,7 +306,8 @@ public class LandMarkGraph {
 		try {
 			String thisLine = null;
 			BufferedReader br = new BufferedReader(new FileReader(
-					"G:/taxidata/mapMatchingResult/landmarkedge.txt"));
+
+			"G:/taxidata/mapMatchingResult/landmarkedge size=200.txt"));
 			while ((thisLine = br.readLine()) != null) {
 				String[] s = thisLine.split(";");
 				LandMarkEdge lme = new LandMarkEdge();
@@ -351,8 +355,8 @@ public class LandMarkGraph {
 						if (time <= 30) {
 							String candidateid = s1[0].trim() + "+"
 									+ s2[0].trim();
-							String day = (s1[1].split(" ")[1]).split("-")[2];
-							String hour = (s1[1].split(" ")[2]).split(":")[0];
+							String day = (s1[1].split(" ")[0]).split("-")[2];
+							String hour = (s1[1].split(" ")[1]).split(":")[0];
 							if (candidateedge.containsKey(candidateid)) {
 								candidateedge.get(candidateid).add(
 										day + "+" + hour + "+" + time);
@@ -370,6 +374,7 @@ public class LandMarkGraph {
 					}
 				}
 				br.close();
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -378,7 +383,7 @@ public class LandMarkGraph {
 		// System.out.println("~~~~~~~~~~~~~");
 		// 从candidateedge候选边到landmarkedge
 		for (String key : candidateedge.keySet()) {
-			if (candidateedge.get(key).size() >= 1) {
+			if (candidateedge.get(key).size() >= 200) {
 				LandMarkEdgeMap.put(key,
 						new LandMarkEdge(key, candidateedge.get(key)));
 			}
@@ -422,8 +427,8 @@ public class LandMarkGraph {
 	private int getTimeBetweenPoi(String time1, String time2) {
 		String[] a1 = time1.split(" ");
 		String[] a2 = time2.split(" ");
-		int minute1 = Integer.parseInt(a1[2].split(":")[1]);
-		int minute2 = Integer.parseInt(a2[2].split(":")[1]);
+		int minute1 = Integer.parseInt(a1[1].split(":")[1]);
+		int minute2 = Integer.parseInt(a2[1].split(":")[1]);
 		return ((minute2 + 60 - minute1) % 60);
 	}
 

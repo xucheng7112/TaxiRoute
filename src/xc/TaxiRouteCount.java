@@ -11,15 +11,14 @@ public class TaxiRouteCount {
 
 	public static void main(String[] args) {
 		TaxiRouteCount trc = new TaxiRouteCount();
-		trc.mapMatching();
-//		trc.getroute();
+		trc.getroute();
 	}
 
-	private void mapMatching() {
-		// TODO Auto-generated method stub
-		g = new Graph();
-		g.mapMatching();
-	}
+	// private void mapMatching() {
+	// // TODO Auto-generated method stub
+	// g = new Graph();
+	// g.mapMatching();
+	// }
 
 	private void getroute() {
 		g = new Graph();

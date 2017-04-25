@@ -103,11 +103,11 @@ public class MapMatchingGridIndex {
 		if (indexPoint != null) {
 			if (grids[indexPoint.indexLng][indexPoint.indexLat] != null) {
 				pl = grids[indexPoint.indexLng][indexPoint.indexLat].substances;
-			}else{
+			} else {
 				return -1;
 			}
 		}
-		if(pl==null){
+		if (pl == null) {
 			return -1;
 		}
 		double distance = Integer.MAX_VALUE;
@@ -118,8 +118,8 @@ public class MapMatchingGridIndex {
 			tmpDistance = Math.sqrt(Math.pow(p.getLat() - node.getLat(), 2)
 					+ Math.pow(p.getLng() - node.getLng(), 2));
 			if (tmpDistance < distance) {
-				roadID=node.getMapMatchingRoadID();
-				distance=tmpDistance;
+				roadID = node.getMapMatchingRoadID();
+				distance = tmpDistance;
 			}
 		}
 		return roadID;

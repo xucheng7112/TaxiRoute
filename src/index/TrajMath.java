@@ -70,89 +70,6 @@ public class TrajMath {
 	}
 
 	/**
-	 * floyd算法
-	 * 
-	 * @param nodelist
-	 * @param vertex
-	 * @param nodeid1
-	 * @param nodeid2
-	 * @return
-	 */
-	static List<Integer> tmpresult = new ArrayList<Integer>(); // 点集合，存储结果轨迹
-
-	public static List<Integer> Floyd(List<Integer> nodelist,
-			Map<Integer, List<Integer>> vertex, int nodeid1, int nodeid2) {
-		int nodelength;
-		nodelength = nodelist.size();
-		int[][] path = new int[nodelength][nodelength];
-		double[][] dist = new double[nodelength][nodelength];
-		int INF = Integer.MAX_VALUE;
-		Map<Integer, Integer> ntonodeid = new HashMap<Integer, Integer>(); // 1,2...n
-																			// 与n个点的映射
-		Map<Integer, Integer> nodeidton = new HashMap<Integer, Integer>(); // n个点与1,2...n
-																			// 的映射
-		for (int i = 0; i < nodelength; i++) {
-			ntonodeid.put(i, nodelist.get(i));
-			nodeidton.put(nodelist.get(i), i);
-		}
-		double[][] matrix = new double[nodelength][nodelength];
-		for (int i = 0; i < nodelength; i++) {
-			for (int j = 0; j < nodelength; j++) {
-				matrix[i][j] = INF;
-			}
-		}
-		for (Integer startnodeid : vertex.keySet()) {
-			List<Integer> endnodeidlist = vertex.get(startnodeid);
-			for (Integer endnodeid : endnodeidlist) {
-				matrix[nodeidton.get(startnodeid)][nodeidton.get(endnodeid)] = 1;
-			}
-		}
-		int size = matrix.length;
-		// initialize dist and path
-		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
-				path[i][j] = -1;
-				dist[i][j] = matrix[i][j];
-			}
-		}
-		for (int k = 0; k < size; k++) {
-			for (int i = 0; i < size; i++) {
-				for (int j = 0; j < size; j++) {
-					if (dist[i][k] != INF && dist[k][j] != INF
-							&& dist[i][k] + dist[k][j] < dist[i][j]) {
-						dist[i][j] = dist[i][k] + dist[k][j];
-						path[i][j] = k;
-					}
-				}
-			}
-		}
-		tmpresult = null;
-		tmpresult = new ArrayList<Integer>();
-		tmpresult.add(nodeidton.get(nodeid1));
-		findPath(nodeidton.get(nodeid1), nodeidton.get(nodeid2), path);
-		tmpresult.add(nodeidton.get(nodeid2));
-		List<Integer> tmp = tmpresult;
-		tmpresult = new ArrayList<Integer>();
-		for (Integer i : tmp) {
-			tmpresult.add(ntonodeid.get(i));
-		}
-		for (Integer i : tmpresult) {
-			System.out.println(i);
-		}
-
-		return tmpresult;
-	}
-
-	private static void findPath(int i, int j, int[][] path) {
-		int k = path[i][j];
-		if (k == -1)
-			return;
-		findPath(i, k, path); // 递归
-		tmpresult.add(k);
-		findPath(k, j, path);
-	}
-
-	/**
 	 * 点到直线距离
 	 * 
 	 * @param lat
@@ -263,5 +180,12 @@ public class TrajMath {
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
 			System.exit(0);
 		}
+	}
+
+	public static double Euclid(MapNode node1, MapNode node2) {
+		double distance = Math
+				.sqrt(Math.pow(node1.getLat() - node2.getLat(), 2)
+						+ Math.pow(node1.getLng() - node2.getLng(), 2));
+		return distance;
 	}
 }
