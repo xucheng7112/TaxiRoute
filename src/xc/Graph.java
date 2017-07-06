@@ -188,12 +188,13 @@ public class Graph {
 		System.out.println("正在初始化轨迹计算环境：");
 		lmg = new LandMarkGraph();
 		Scanner sc = new Scanner(System.in);
-		int count = 21;
+		int count = 4;
 		while (count != -1) {
 			System.out.println("请依次输入起点的Lat，Lng：");
 			MapNode mapNode = new MapNode(0, sc.nextDouble(), sc.nextDouble());
 			System.out.println("请依次输入终点的Lat，Lng：");
 			MapNode mapNode2 = new MapNode(1, sc.nextDouble(), sc.nextDouble());
+			double time1 = System.currentTimeMillis();
 			MapEdge mapedge = getNearEdge(mapNode.getLat(), mapNode.getLng(),
 					lmg.getLandMarknode());
 			MapEdge mapedge2 = getNearEdge(mapNode2.getLat(),
@@ -201,6 +202,8 @@ public class Graph {
 			List<Integer> roughroute = lmg.getRoughRoute(mapedge.getEdgeId(),
 					mapedge2.getEdgeId());
 			System.out.println("RoughRoute匹配完毕");
+			double time2 = System.currentTimeMillis();
+			System.out.println("roughtime=" + (time2 - time1));
 			List<Integer> finalresult = new ArrayList<Integer>();
 			for (int a = 0; a < roughroute.size() - 1; a++) {
 				Integer roughroadid = roughroute.get(a);
@@ -242,6 +245,8 @@ public class Graph {
 				// + nodeMap.get(i).getLat());
 				finalresultnodels.add(nodeMap.get(i));
 			}
+			double time3 = System.currentTimeMillis();
+			System.out.println("exacttime=" + (time3 - time2));
 			System.out.println("导入数据库中：");
 			TrajMath.LeadingIntoPostgreSql(finalresultnodels, "table" + count);
 			count++;

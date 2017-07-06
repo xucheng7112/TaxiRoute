@@ -26,6 +26,8 @@ public class LandMarkGraph {
 	int nodelength;
 
 	public LandMarkGraph() {
+
+		// CountLandMarknode();
 		initLandMarkNode();
 		initMember();
 		// CountLandMarkEdge();
@@ -230,7 +232,7 @@ public class LandMarkGraph {
 		try {
 			String thisLine = null;
 			BufferedReader br = new BufferedReader(new FileReader(
-					"G:/taxidata/mapMatchingResult/landmarknode.txt"));
+					"G:/taxidata/LandMarkNode/landmarknode size=4000.txt"));
 			while ((thisLine = br.readLine()) != null) {
 				int a = Integer.parseInt(thisLine);
 				LandMarkNode.add(a);
@@ -283,7 +285,7 @@ public class LandMarkGraph {
 						}
 					});
 			// ±È¿˙«∞4000£¨±£¥Ê
-			String filename = "G:/taxidata/mapMatchingResult/landmarknode.txt";
+			String filename = "G:/taxidata/LandMarkNode/landmarknode size=1500.txt";
 			BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
 			for (int i = 0; i < 4000; i++) {
 				Entry<Integer, Integer> mapping = list.get(i);
@@ -307,7 +309,7 @@ public class LandMarkGraph {
 			String thisLine = null;
 			BufferedReader br = new BufferedReader(new FileReader(
 
-			"G:/taxidata/mapMatchingResult/landmarkedge size=200.txt"));
+			"G:/taxidata/LandMarkEdge/landmarkedge size=200.txt"));
 			while ((thisLine = br.readLine()) != null) {
 				String[] s = thisLine.split(";");
 				LandMarkEdge lme = new LandMarkEdge();
